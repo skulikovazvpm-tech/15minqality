@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>15-минутки качества | АО «Завод Продмаш»</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Calibri','Segoe UI',Arial,sans-serif;background:#cfd3dc;min-height:100vh;}
+.topbar{background:#1565C0;border-bottom:3px solid #E65100;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
+.tb-title{color:#fff;font-weight:700;font-size:14px;}
+.tb-sp{flex:1;}
+.topbar label{color:rgba(255,255,255,.8);font-size:12px;}
+.topbar select{background:#1A237E;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 8px;font-size:12px;cursor:pointer;}
+.btn{border:none;border-radius:4px;padding:6px 13px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;}
+.btn-up{background:#E65100;color:#fff;}
+.btn-pdf{background:#1A237E;color:#fff;border:1px solid rgba(255,255,255,.35);}
+.btn-pdf:disabled{opacity:.4;cursor:not-allowed;}
+.infobar{padding:6px 16px;font-size:12px;border-bottom:1px solid;}
+.infobar-demo{background:#FFF8E1;border-color:#FFD54F;color:#5D4037;}
+.infobar-ok{background:#E8F5E9;border-color:#81C784;color:#1B5E20;}
+.infobar-err{background:#FFEBEE;border-color:#EF9A9A;color:#B71C1C;}
+.tabs{background:#fff;border-bottom:1px solid #ddd;padding:6px 16px;display:flex;gap:4px;flex-wrap:wrap;}
+.tab{background:#f0f2f5;color:#444;border:none;border-radius:4px;padding:4px 11px;cursor:pointer;font-size:11px;}
+.tab-active{background:#1565C0;color:#fff;font-weight:700;}
+.slides-wrap{padding:16px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.slide{width:1122px;height:794px;background:#fff;border-radius:5px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.18);display:flex;flex-direction:column;}
+.slide-hidden{display:none!important;}
+#empty{text-align:center;padding:60px 20px;color:#888;}
+#loading{display:none;text-align:center;padding:40px;color:#666;font-size:14px;}
+
+/* slide header */
+.slide-head{background:#1565C0;border-bottom:3px solid #E65100;padding:9px 18px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.slide-head-title{color:#fff;font-size:21px;font-weight:700;}
+.slide-head-period{background:#1A237E;color:#fff;padding:4px 13px;border-radius:4px;text-align:center;min-width:76px;font-size:13px;font-weight:700;line-height:1.5;}
+/* kpi */
+.kpi-row{padding:8px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:9px;flex-shrink:0;}
+.kpi-card{border-radius:4px;padding:6px 11px;border-width:2px;border-style:solid;}
+.kpi-label{font-size:10.5px;color:#555;margin-bottom:2px;}
+.kpi-value{font-size:20px;font-weight:700;}
+/* sec head */
+.sec-head{background:#1565C0;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:3px;margin-bottom:7px;}
+/* footer */
+.slide-foot{border-top:1px solid #e0e0e0;padding:3px 18px;background:#f7f7f7;font-size:10px;color:#888;flex-shrink:0;margin-top:auto;}
+/* hbar */
+.hb-row{display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.hb-label{width:130px;text-align:right;font-size:10.5px;color:#222;flex-shrink:0;line-height:1.2;}
+.hb-track{flex:1;background:#e2e2e2;border-radius:3px;overflow:hidden;}
+.hb-fill{border-radius:3px;}
+.hb-val{width:72px;font-size:10.5px;font-weight:700;color:#111;flex-shrink:0;}
+/* unit body */
+.unit-body{flex:1;padding:0 18px 10px;display:grid;grid-template-columns:420px 1fr;gap:18px;overflow:hidden;}
+.unit-col{display:flex;flex-direction:column;gap:12px;min-width:0;overflow:hidden;}
+/* shift */
+.shift-body{flex:1;padding:12px 20px;display:flex;gap:28px;align-items:flex-start;overflow:hidden;}
+.shift-cards{flex:1;display:flex;flex-direction:column;gap:7px;}
+.shift-card{border-radius:4px;padding:9px 13px;color:#fff;}
+.shift-card-row{display:flex;justify-content:space-between;margin-bottom:6px;gap:8px;}
+.shift-bar-bg{background:rgba(255,255,255,.14);height:5px;border-radius:3px;}
+.shift-bar-fg{height:100%;border-radius:3px;}
+/* summary */
+.sum-total{padding:6px 18px 2px;font-size:13px;font-weight:700;}
+.sum-ucards{padding:4px 18px 6px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.sum-uc{border-radius:4px;padding:6px 11px;color:#fff;}
+.sum-uc-label{font-size:10px;opacity:.8;margin-bottom:2px;}
+.sum-uc-val{font-size:15px;font-weight:700;}
+.sum-grid{padding:4px 18px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;overflow:hidden;}
+.sum-chart-box{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.sum-defects{padding:6px 18px 8px;}
+.def-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;background:#f5f5f5;border-radius:3px;padding:4px 8px;}
+.def-badge{border-radius:3px;padding:2px 7px;font-size:10.5px;font-weight:700;flex-shrink:0;min-width:78px;text-align:center;color:#fff;white-space:nowrap;}
+.def-text{font-size:10.5px;color:#333;line-height:1.4;}
+/* pdf overlay */
+.pdf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.pdf-overlay-show{display:flex;}
+.pdf-msg{color:#fff;font-size:14px;font-weight:600;}
+.pdf-bar-wrap{width:340px;height:8px;background:rgba(255,255,255,.25);border-radius:4px;overflow:hidden;}
+.pdf-bar{height:100%;background:#E65100;border-radius:4px;transition:width .25s;}
+@media print{
+  .topbar,.tabs,.infobar,.pdf-overlay{display:none!important;}
+  body{background:#fff;}
+  .slides-wrap{padding:0;gap:0;}
+  .slide{box-shadow:none;border-radius:0;page-break-after:always;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-title">15-минутки качества &nbsp;|&nbsp; АО «Завод Продмаш»</div>
+  <div class="tb-sp"></div>
+  <label>Период:</label>
+  <select id="monthSel" onchange="renderAll()"></select>
+  <button class="btn btn-up" onclick="document.getElementById('fi').click()">📂 Загрузить XLSX</button>
+  <input type="file" id="fi" accept=".xlsx,.xls" style="display:none" onchange="loadFile(event)">
+  <button class="btn btn-pdf" id="btnPdf" onclick="exportPdf()" disabled>⬇ Сохранить PDF</button>
+</div>
+
+<div id="infoBar" class="infobar infobar-demo">
+  ℹ️ <b>Данные не загружены.</b> Загрузите XLSX-файл реестра несоответствий.
+  Нужные колонки: <b>Номер · Дата · Склад (место возникновения) · Кол., кг · Вид несоответствия · Критичность · Смена · Группа номенклатуры</b>
+</div>
+
+<div class="tabs">
+  <button class="tab tab-active" data-tab="all"    onclick="setTab(this)">Все слайды</button>
+  <button class="tab" data-tab="upn"               onclick="setTab(this)">УПН</button>
+  <button class="tab" data-tab="umi811"            onclick="setTab(this)">УМИ 8,9,11</button>
+  <button class="tab" data-tab="umi24"             onclick="setTab(this)">УМИ 2,4</button>
+  <button class="tab" data-tab="cgc"               onclick="setTab(this)">ЦГЦ</button>
+  <button class="tab" data-tab="sh_upn"            onclick="setTab(this)">УПН — смены</button>
+  <button class="tab" data-tab="sh_umi"            onclick="setTab(this)">УМИ — смены</button>
+  <button class="tab" data-tab="sh_cgc"            onclick="setTab(this)">ЦГЦ — смены</button>
+  <button class="tab" data-tab="sum"               onclick="setTab(this)">Сводный анализ</button>
+</div>
+
+<div id="loading">⏳ Обработка файла...</div>
+<div id="empty"><h2>📊 Загрузите XLSX-файл</h2><p>Нажмите «Загрузить XLSX» в верхней панели</p></div>
+<div class="slides-wrap" id="slidesWrap" style="display:none">
+  <div id="sl-upn"    class="slide"></div>
+  <div id="sl-umi811" class="slide"></div>
+  <div id="sl-umi24"  class="slide"></div>
+  <div id="sl-cgc"    class="slide"></div>
+  <div id="sl-sh_upn" class="slide"></div>
+  <div id="sl-sh_umi" class="slide"></div>
+  <div id="sl-sh_cgc" class="slide"></div>
+  <div id="sl-sum"    class="slide"></div>
+</div>
+
+<div id="pdfOvl" class="pdf-overlay">
+  <div class="pdf-msg" id="pdfMsg">Подготовка...</div>
+  <div class="pdf-bar-wrap"><div class="pdf-bar" id="pdfBar" style="width:0"></div></div>
+</div>
+
+<script>
+/* =============================================================
+   IMPORTANT: No 'class=' inside template literals or strings.
+   All HTML is built via createElement / setAttribute / style.
+   ============================================================= */
+
+var MRU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+var UC  = {'УПН':'#1565C0','УМИ 8,9,11':'#2E7D32','УМИ 2,4':'#6A1B9A','ЦГЦ':'#E65100'};
+var CC  = {'Устранимое':'#2E7D32','Малозначительное':'#E65100','Неустранимое':'#C62828','В работе':'#6A1B9A','Отработка технологии':'#00897B'};
+var DP  = ['#1565C0','#E65100','#00897B','#2E7D32','#C62828'];
+var PP  = ['#C62828','#00897B','#42A5F5','#2E7D32','#6A1B9A','#757575','#F57F17','#4E342E'];
+var GP  = ['#1565C0','#2E7D32','#E65100','#6A1B9A','#00897B','#C62828','#F57F17','#4E342E','#0277BD','#558B2F'];
+
+var RECS = [], MONTH = null, CUR_TAB = 'all';
+var CH = {};
+
+function fmtK(v){ return (v==null||isNaN(v)) ? '—' : v.toLocaleString('ru-RU',{minimumFractionDigits:0,maximumFractionDigits:1}); }
+function fmtI(v){ return (v==null||isNaN(v)) ? '—' : Math.round(v).toLocaleString('ru-RU'); }
+
+/* ---------- DOM helpers (no class= in strings) ---------- */
+function el(tag, cn, styles, text){
+  var e = document.createElement(tag);
+  if(cn) e.className = cn;
+  if(styles) Object.assign(e.style, styles);
+  if(text != null) e.textContent = text;
+  return e;
+}
+function app(parent){ for(var i=1;i<arguments.length;i++) if(arguments[i]) parent.appendChild(arguments[i]); return parent; }
+
+/* ---------- slide head ---------- */
+function makeHead(title, periodStr){
+  var wrap = el('div','slide-head');
+  var t = el('div','slide-head-title',null,title);
+  var parts = periodStr.split('\n');
+  var p = el('div','slide-head-period');
+  p.innerHTML = parts[0] + '<br>' + (parts[1]||'');
+  return app(wrap, t, p);
+}
+
+/* ---------- kpi row ---------- */
+function makeKpi(cards){
+  var row = el('div','kpi-row');
+  cards.forEach(function(c){
+    var card = el('div','kpi-card');
+    card.style.borderColor = c.cl;
+    var lbl = el('div','kpi-label',null,c.l);
+    var val = el('div','kpi-value');
+    val.style.color = c.cl;
+    val.textContent = c.v;
+    app(card, lbl, val);
+    row.appendChild(card);
+  });
+  return row;
+}
+
+/* ---------- section head ---------- */
+function makeSH(txt){ return el('div','sec-head',null,txt); }
+
+/* ---------- footer ---------- */
+function makeFoot(txt){ return el('div','slide-foot',null,txt); }
+
+/* ---------- hbars ---------- */
+function makeHbars(items, bh){
+  bh = bh || 25;
+  var wrap = el('div');
+  if(!items||!items.length){ wrap.textContent='Нет данных'; wrap.style.color='#aaa'; wrap.style.fontSize='11px'; return wrap; }
+  var mx = Math.max.apply(null, items.map(function(d){return d.v;}));
+  if(mx <= 0) mx = 1;
+  items.forEach(function(d){
+    var row = el('div','hb-row');
+    var lbl = el('div','hb-label',null,d.l);
+    var track = el('div','hb-track',{height:bh+'px'});
+    var fill = el('div','hb-fill',{width:(d.v/mx*100).toFixed(1)+'%',height:bh+'px',background:d.c||'#1565C0'});
+    var val = el('div','hb-val',null,fmtK(d.v));
+    track.appendChild(fill);
+    app(row, lbl, track, val);
+    wrap.appendChild(row);
+  });
+  return wrap;
+}
+
+/* ---------- shift color ---------- */
+function shCol(n){
+  var nl = n.toLowerCase();
+  if(nl.indexOf('невозможно')>=0) return '#1565C0';
+  if(nl.indexOf('смена а')>=0 || nl==='смена а') return '#E65100';
+  if(nl.indexOf('смена б')>=0 || nl==='смена б') return '#2E7D32';
+  if(nl.indexOf('смена в')>=0 || nl==='смена в') return '#00897B';
+  if(nl.indexOf('работе')>=0) return '#6A1B9A';
+  if(nl.indexOf('отработ')>=0) return '#4E342E';
+  return '#757575';
+}
+
+/* ---------- wrap label for chart ---------- */
+function wrapLbl(txt, mx){
+  mx = mx || 18;
+  if(txt.length <= mx) return txt;
+  var words = txt.split(' '), lines = [], cur = '';
+  words.forEach(function(w){
+    if(!cur){ cur=w; }
+    else if((cur+' '+w).length <= mx){ cur+=' '+w; }
+    else { lines.push(cur); cur=w; }
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+/* ---------- chart destroy ---------- */
+function destroyCh(id){ if(CH[id]){ CH[id].destroy(); delete CH[id]; } }
+
+/* ---------- value label plugin ---------- */
+var VLP = {
+  id: 'vlp',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    ctx.save();
+    var isH = chart.options.indexAxis === 'y';
+    chart.data.datasets.forEach(function(ds, di){
+      if(ds._skip) return;
+      var meta = chart.getDatasetMeta(di);
+      if(meta.hidden) return;
+      meta.data.forEach(function(bar, i){
+        var val = ds.data[i];
+        if(!val && val !== 0) return;
+        var fmt = ds._fmt || fmtI;
+        var txt = fmt(val);
+        ctx.font = 'bold 11px Calibri';
+        ctx.fillStyle = '#111';
+        if(isH){
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(txt, bar.x+5, bar.y);
+        } else {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(txt, bar.x, bar.y-4);
+        }
+      });
+    });
+    ctx.restore();
+  }
+};
+
+/* ---------- doughnut label plugin ---------- */
+var DLP = {
+  id: 'dlp',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    var data = chart.data;
+    ctx.save();
+    var meta = chart.getDatasetMeta(0);
+    if(!meta || !meta.data) return;
+    meta.data.forEach(function(arc, i){
+      var val = data.datasets[0].data[i];
+      var tot = data.datasets[0].data.reduce(function(a,b){return a+b;}, 0);
+      if(!tot || !val) return;
+      var pct = Math.round(val/tot*100);
+      if(pct < 4) return;
+      var ang = arc.startAngle + (arc.endAngle - arc.startAngle)/2;
+      var r = (arc.innerRadius + arc.outerRadius)/2;
+      var x = arc.x + r*Math.cos(ang);
+      var y = arc.y + r*Math.sin(ang);
+      ctx.font = 'bold 12px Calibri';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pct+'%', x, y);
+    });
+    ctx.restore();
+  }
+};
+
+/* =============================================================
+   FILE LOADING
+   ============================================================= */
+function loadFile(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('slidesWrap').style.display = 'none';
+  document.getElementById('empty').style.display = 'none';
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      var wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array', cellDates:true});
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
+      var parsed = parseRows(rows);
+      if(!parsed || !parsed.length){
+        setInfo('err','Не удалось распознать файл. Проверьте наличие колонок: Номер, Кол., кг, Склад (место возникновения).');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('empty').style.display = 'block';
+        return;
+      }
+      RECS = parsed;
+      buildSel();
+      renderAll();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('slidesWrap').style.display = 'flex';
+      document.getElementById('btnPdf').disabled = false;
+      var ms = [];
+      var seen = {};
+      parsed.forEach(function(r){ var k=r.mo+' '+r.yr; if(!seen[k]){seen[k]=1;ms.push(k);} });
+      setInfo('ok','Загружено '+parsed.length+' записей. Периоды: '+ms.join(', '));
+    } catch(err){
+      setInfo('err','Ошибка: '+err.message);
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('empty').style.display = 'block';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+}
+
+function setInfo(type, txt){
+  var el2 = document.getElementById('infoBar');
+  el2.className = 'infobar infobar-'+type;
+  el2.innerHTML = (type==='err'?'⚠️ ':type==='ok'?'✅ ':'ℹ️ ') + txt;
+}
+
+/* =============================================================
+   PARSING
+   ============================================================= */
+var RE_DATE = /(\d{1,2})\.(\d{1,2})\.(\d{4})/;
+
+function parseDate(c){
+  if(c instanceof Date && !isNaN(c)) return c;
+  if(typeof c === 'number'){
+    var p = XLSX.SSF.parse_date_code(c);
+    if(p) return new Date(p.y, p.m-1, p.d);
+  }
+  var m = String(c||'').match(RE_DATE);
+  return m ? new Date(+m[3], +m[2]-1, +m[1]) : null;
+}
+
+function normCrit(c){
+  c = c.trim();
+  // Только комбинации с "Устранимое" → сливаем в "Устранимое" (по регламенту)
+  if((c.indexOf('Неустранимое')>=0   && c.indexOf('Устранимое')>=0) ||
+     (c.indexOf('Малозначительное')>=0 && c.indexOf('Устранимое')>=0)) return 'Устранимое';
+  // "Малозначительное Неустранимое" — нет "Устранимое", значит → "Неустранимое"
+  if(c.indexOf('Малозначительное')>=0 && c.indexOf('Неустранимое')>=0) return 'Неустранимое';
+  // Одиночные значения
+  if(c.indexOf('Неустранимое')>=0)    return 'Неустранимое';
+  if(c.indexOf('Малозначительное')>=0) return 'Малозначительное';
+  if(c.indexOf('Устранимое')>=0)      return 'Устранимое';
+  if(c.indexOf('В работе')>=0)        return 'В работе';
+  if(c.indexOf('Отработка')>=0)       return 'Отработка технологии';
+  return c;
+}
+
+function mapUnit(sk, sh){
+  var s=sk.trim(), sl=s.toLowerCase(), sm=sh.toLowerCase();
+
+  // ── УМИ: корпуса 8, 9, 11 → УМИ 8,9,11 ; корпуса 2, 4, 04 → УМИ 2,4 ──
+  if(sl.indexOf('уми')>=0){
+    if(s.indexOf('8')>=0 || s.indexOf('9')>=0 || s.indexOf('11')>=0) return 'УМИ 8,9,11';
+    if(s.indexOf('2')>=0 || s.indexOf('4')>=0)  return 'УМИ 2,4';
+    return 'УМИ 8,9,11'; // УМИ без номера корпуса — по умолчанию
+  }
+
+  // ── УПН: корпуса 7(07), 9(09), 13 ──
+  if(sl.indexOf('упн')>=0) return 'УПН';
+
+  // ── ЦГЦ: все ЦЦ-склады ──
+  if(sl.indexOf('цц')>=0) return 'ЦГЦ';
+
+  // ── Точные значения без префикса участка ──
+  // УМИ 8,9,11
+  if(s==='Корпус №11' || s==='Корпус №9') return 'УМИ 8,9,11';
+  // УПН
+  if(s==='Корпус №13' || s==='Корпус №07' || s==='Корпус №7') return 'УПН';
+  // ЦГЦ
+  if(s==='Корпус №01' || s==='Корпус №1' || s==='Корпус №03' || s==='Корпус №3') return 'ЦГЦ';
+  // УМИ 2,4
+  if((s==='Корпус №02'||s==='Корпус №04'||s==='Корпус №2'||s==='Корпус №4') && sm.indexOf('уми')>=0) return 'УМИ 2,4';
+
+  return null; // Логистика, Не определено, ОЭУ — исключаются
+}
+
+function parseRows(rows){
+  if(rows.length < 2) return null;
+  var H = rows[0].map(function(h){ return String(h||'').trim(); });
+  function ci(){
+    for(var a=0;a<arguments.length;a++){
+      var term = arguments[a];
+      var i = -1;
+      for(var b=0;b<H.length;b++){ if(H[b].indexOf(term)>=0){ i=b; break; } }
+      if(i>=0) return i;
+    }
+    return -1;
+  }
+  var iN=ci('Номер'), iD=ci('Дата'), iM=ci('Кол., кг'), iS=ci('Склад (место'),
+      iDf=ci('Вид несоотв'), iCr=ci('Критичность'), iSh=ci('Ответственная смена'),
+      iSrc=ci('Источник'), iG=ci('Группа номенклатуры');
+  if(iN<0 || iM<0) return null;
+
+  var fMo='—', fYr='2026';
+  for(var i=1;i<rows.length;i++){
+    var dt = iD>=0 ? parseDate(rows[i][iD]) : null;
+    if(!dt) dt = parseDate(rows[i][iN]);
+    if(dt){ fMo=MRU[dt.getMonth()]; fYr=String(dt.getFullYear()); break; }
+  }
+
+  var out = [];
+  var lastNom = '';   // последний непустой номер
+  var lastDt  = null; // дата от последней строки с номером
+  for(var i=1;i<rows.length;i++){
+    var r = rows[i];
+    var nom = String(r[iN]||'').trim();
+    // Пустой номер = продолжение предыдущего акта (несколько позиций)
+    if(!nom){
+      if(!lastNom) continue; // совсем нет номера — пропускаем
+      nom = lastNom;         // берём номер предыдущей строки
+    } else {
+      lastNom = nom;
+      lastDt  = iD>=0 ? parseDate(r[iD]) : null;
+      if(!lastDt) lastDt = parseDate(r[iN]);
+    }
+    var isR = nom.charAt(0)==='В';
+    var mass = parseFloat(String(r[iM]||'0').replace(',','.').replace(/\s/g,''))||0;
+    if(mass<=0) continue;
+
+    var mo=fMo, yr=fYr;
+    var dt2 = iD>=0 ? parseDate(r[iD]) : null;
+    if(!dt2) dt2 = parseDate(r[iN]);
+    if(dt2){ mo=MRU[dt2.getMonth()]; yr=String(dt2.getFullYear()); }
+
+    var sk  = iS>=0  ? String(r[iS] ||'').trim() : '';
+    var sh  = iSh>=0 ? String(r[iSh]||'').trim() : '';
+    var df  = iDf>=0 ? String(r[iDf]||'').trim() : '';
+    var g   = iG>=0  ? String(r[iG] ||'').trim() : '';
+    var cr  = iCr>=0 ? normCrit(String(r[iCr]||'').trim()) : '';
+    var nc  = nom.split(',')[0].trim();
+    var doc = '';
+    var fc = nc.charAt(0);
+    if(fc==='И') doc='И'; else if(fc==='К') doc='К'; else if(fc==='С') doc='С'; else if(fc==='В') doc='В';
+    if(!doc && iSrc>=0){
+      var src = String(r[iSrc]||'').toLowerCase();
+      if(src.indexOf('инспекц')>=0) doc='И';
+      else if(src.indexOf('карт')>=0) doc='К';
+      else if(src.indexOf('само')>=0) doc='С';
+    }
+    out.push({nom:nc, mass:mass, mo:mo, yr:yr, sk:sk, unit:isR?null:mapUnit(sk,sh), sh:sh, df:df, cr:cr, doc:doc, g:g, isR:isR});
+  }
+  return out.length ? out : null;
+}
+
+/* =============================================================
+   MONTH SELECTOR
+   ============================================================= */
+function buildSel(){
+  var seen={}, list=[];
+  RECS.forEach(function(r){
+    if(r.mo==='—') return;
+    var k = r.yr + String(MRU.indexOf(r.mo)).padStart(2,'0');
+    if(!seen[k]){ seen[k]=1; list.push({k:k,m:r.mo,y:r.yr}); }
+  });
+  list.sort(function(a,b){ return a.k.localeCompare(b.k); });
+  var sel = document.getElementById('monthSel');
+  sel.innerHTML = '';
+  list.forEach(function(x){
+    var o = document.createElement('option');
+    o.value = x.m; o.textContent = x.m+' '+x.y;
+    sel.appendChild(o);
+  });
+  if(list.length){ sel.value=list[list.length-1].m; MONTH=sel.value; }
+}
+function getYr(mo){ var r=RECS.find(function(x){return x.mo===mo&&x.yr;}); return r?r.yr:'2026'; }
+
+/* =============================================================
+   STATS
+   ============================================================= */
+function calcStats(uk, mo){
+  var d = RECS.filter(function(r){ return !r.isR && r.unit===uk && (!mo||r.mo===mo); });
+  var tot = d.reduce(function(s,r){ return s+r.mass; }, 0);
+  var docs = {С:{},И:{},К:{}};
+  d.forEach(function(r){ if(docs[r.doc]) docs[r.doc][r.nom]=1; });
+  var dc = {С:Object.keys(docs['С']).length, И:Object.keys(docs['И']).length, К:Object.keys(docs['К']).length};
+  var cm={}, dm={}, gm={}, sm={};
+  d.forEach(function(r){
+    cm[r.cr] = (cm[r.cr]||0)+r.mass;
+    if(r.df) dm[r.df] = (dm[r.df]||0)+r.mass;
+    if(r.g)  gm[r.g]  = (gm[r.g] ||0)+r.mass;
+    var s=r.sh||'Невозможно установить';
+    sm[s]=(sm[s]||0)+r.mass;
+  });
+  var td = Object.entries(dm).sort(function(a,b){return b[1]-a[1];}).slice(0,5).map(function(x){return{n:x[0],v:x[1]};});
+  var tg = Object.entries(gm).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{n:x[0],v:x[1]};});
+  var sh = Object.entries(sm).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{n:x[0],v:x[1]};});
+  return {tot:tot, dc:dc, cm:cm, td:td, tg:tg, sh:sh};
+}
+
+function calcShifts(uk){
+  var d = RECS.filter(function(r){ return !r.isR && r.unit===uk && r.mo===MONTH; });
+  var m={};
+  d.forEach(function(r){
+    var s = r.sh||'Невозможно установить';
+    var sl = s.toLowerCase();
+    if(sl.indexOf('невозможно')>=0) s='Невозможно установить';
+    else if(sl.indexOf('смена а')>=0) s='Смена А';
+    else if(sl.indexOf('смена б')>=0) s='Смена Б';
+    else if(sl.indexOf('смена в')>=0) s='Смена В';
+    else if(sl.indexOf('работе')>=0) s='В работе';
+    else if(sl.indexOf('отработ')>=0) s='Отработка';
+    m[s]=(m[s]||0)+r.mass;
+  });
+  var tot = Object.values(m).reduce(function(a,b){return a+b;},0);
+  return Object.entries(m).sort(function(a,b){return b[1]-a[1];}).map(function(x){
+    return {n:x[0], v:x[1], pct:tot>0?Math.round(x[1]/tot*100):0};
+  });
+}
+
+/* =============================================================
+   RENDER: UNIT SLIDE
+   3 колонки: Критичность+ПродНапр | ТопДефектов | РаспрПоСменам
+   ============================================================= */
+function renderUnit(elId, title, uk, fsuf, period){
+  var S = calcStats(uk, MONTH);
+  var container = document.getElementById(elId);
+  container.innerHTML = '';
+  var cCrit = elId+'crit', cGrp = elId+'grp', cDef = elId+'d', cSh = elId+'s';
+
+  // Цвета продуктовых направлений (постоянные по имени)
+  var GRP_COL = {
+    'БО':'#1565C0','ОО':'#2E7D32','ВСМ':'#E65100','ФО':'#6A1B9A',
+    'ПО':'#00897B','ОМФП':'#C62828','Настилы':'#F57F17','СиМ':'#4E342E',
+    'Ступени':'#0277BD','Проект Добычина О.С.':'#558B2F'
+  };
+  function gc(n){ return GRP_COL[n]||'#757575'; }
+
+  container.appendChild(makeHead(title, period));
+  container.appendChild(makeKpi([
+    {l:'Масса НП',              v:fmtK(S.tot)+' кг',   cl:'#1565C0'},
+    {l:'Самоконтроль (С)',       v:S.dc['С']+' акт(а)', cl:'#2E7D32'},
+    {l:'Инспекц. контроль (И)', v:S.dc['И']+' актов',  cl:'#1565C0'},
+    {l:'Карты контроля (К)',    v:S.dc['К']+' карт(ы)',cl:'#E65100'}
+  ]));
+
+  var body = el('div',null,{
+    height:'638px', padding:'0 18px 8px',
+    display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'16px', overflow:'hidden'
+  });
+
+  // ── COL 1: Критичность (60%) + Продуктовые направления (40%) ──
+  var col1 = el('div',null,{display:'flex',flexDirection:'column',gap:'0',overflow:'hidden'});
+
+  var critWrap = el('div',null,{flex:'6',display:'flex',flexDirection:'column',overflow:'hidden'});
+  critWrap.appendChild(makeSH('Критичность несоответствий'));
+  var cCritBox = el('div',null,{flex:'1',position:'relative',minHeight:'120px'});
+  var cvsCrit = document.createElement('canvas');
+  cvsCrit.id = cCrit;
+  cvsCrit.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;';
+  cCritBox.appendChild(cvsCrit);
+  critWrap.appendChild(cCritBox);
+  col1.appendChild(critWrap);
+
+  var grpWrap = el('div',null,{flex:'5',display:'flex',flexDirection:'column',marginTop:'10px',overflow:'hidden'});
+  grpWrap.appendChild(makeSH('Продуктовые направления, кг'));
+  var cGrpBox = el('div',null,{flex:'1',position:'relative',minHeight:'100px'});
+  var cvsGrp = document.createElement('canvas');
+  cvsGrp.id = cGrp;
+  cvsGrp.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;';
+  cGrpBox.appendChild(cvsGrp);
+  grpWrap.appendChild(cGrpBox);
+  col1.appendChild(grpWrap);
+
+  body.appendChild(col1);
+
+  // ── COL 2: Топ дефектов ──
+  var col2 = el('div',null,{display:'flex',flexDirection:'column',overflow:'hidden'});
+  col2.appendChild(makeSH('Топ дефектов, кг'));
+  var cDefBox = el('div',null,{flex:'1',position:'relative'});
+  var cvsDef = document.createElement('canvas');
+  cvsDef.id = cDef;
+  cvsDef.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;';
+  cDefBox.appendChild(cvsDef);
+  col2.appendChild(cDefBox);
+  body.appendChild(col2);
+
+  // ── COL 3: Распределение по сменам ──
+  var col3 = el('div',null,{display:'flex',flexDirection:'column',overflow:'hidden'});
+  col3.appendChild(makeSH('Распределение по сменам, кг'));
+  var cShBox = el('div',null,{flex:'1',position:'relative'});
+  var cvsSh = document.createElement('canvas');
+  cvsSh.id = cSh;
+  cvsSh.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;';
+  cShBox.appendChild(cvsSh);
+  col3.appendChild(cShBox);
+  body.appendChild(col3);
+
+  container.appendChild(body);
+  container.appendChild(makeFoot('АО «Завод Продмаш» | ОРСМК | '+period.replace('\n',' ')+' | '+fsuf));
+
+  // ── Критичность chart ──
+  destroyCh(cCrit);
+  var critItems = Object.entries(S.cm).sort(function(a,b){return b[1]-a[1];});
+  if(critItems.length){
+    CH[cCrit] = new Chart(document.getElementById(cCrit).getContext('2d'),{
+      type:'bar',
+      data:{
+        labels: critItems.map(function(x){return x[0];}),
+        datasets:[{data:critItems.map(function(x){return x[1];}),
+          backgroundColor:critItems.map(function(x){return CC[x[0]]||'#757575';}),
+          borderRadius:3, _fmt:function(v){return fmtK(v);}}]
+      },
+      options:{
+        indexAxis:'y',
+        layout:{padding:{right:72,top:4,bottom:4,left:4}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmtK(ctx.raw)+' кг';}}}},
+        scales:{
+          x:{ticks:{font:{size:9},callback:function(v){return fmtI(v);}},grid:{color:'#eee'}},
+          y:{ticks:{font:{size:11},color:'#222',padding:4},grid:{display:false}}
+        },
+        animation:false, responsive:true, maintainAspectRatio:false
+      },
+      plugins:[VLP]
+    });
+  }
+
+  // ── Продуктовые направления chart ──
+  destroyCh(cGrp);
+  if(S.tg.length){
+    var gVals = S.tg.map(function(d){return d.v;});
+    CH[cGrp] = new Chart(document.getElementById(cGrp).getContext('2d'),{
+      type:'bar',
+      data:{
+        labels: S.tg.map(function(d){return d.n;}),
+        datasets:[{data:gVals,
+          backgroundColor:S.tg.map(function(d){return gc(d.n);}),
+          borderRadius:3, _fmt:function(v){return fmtK(v);}}]
+      },
+      options:{
+        indexAxis:'y',
+        layout:{padding:{right:72,top:4,bottom:4,left:4}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmtK(ctx.raw)+' кг';}}}},
+        scales:{
+          x:{ticks:{font:{size:9},callback:function(v){return fmtI(v);}},grid:{color:'#eee'}},
+          y:{ticks:{font:{size:11},color:'#222',padding:4},grid:{display:false}}
+        },
+        animation:false, responsive:true, maintainAspectRatio:false
+      },
+      plugins:[VLP]
+    });
+  }
+
+  // ── Топ дефектов chart ──
+  destroyCh(cDef);
+  if(S.td.length){
+    var dVals = S.td.map(function(d){return d.v;});
+    CH[cDef] = new Chart(document.getElementById(cDef).getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:S.td.map(function(d){return wrapLbl(d.n,16);}),
+        datasets:[{data:dVals, backgroundColor:DP.slice(0,dVals.length), borderRadius:4, _fmt:function(v){return fmtK(v)+' кг';}}]
+      },
+      options:{
+        indexAxis:'y',
+        layout:{padding:{right:85,top:4,bottom:4,left:4}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmtK(ctx.raw)+' кг';}}}},
+        scales:{
+          x:{ticks:{font:{size:9},callback:function(v){return fmtI(v);}},grid:{color:'#eee'}},
+          y:{ticks:{font:{size:11},color:'#111',padding:4},grid:{display:false}}
+        },
+        animation:false, responsive:true, maintainAspectRatio:false
+      },
+      plugins:[VLP]
+    });
+  }
+
+  // ── Смены chart ──
+  destroyCh(cSh);
+  if(S.sh.length){
+    var shVals = S.sh.map(function(d){return d.v;});
+    CH[cSh] = new Chart(document.getElementById(cSh).getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:S.sh.map(function(d){return wrapLbl(d.n,14);}),
+        datasets:[{data:shVals, backgroundColor:S.sh.map(function(d){return shCol(d.n);}), borderRadius:4, _fmt:function(v){return fmtK(v)+' кг';}}]
+      },
+      options:{
+        indexAxis:'y',
+        layout:{padding:{right:80,top:4,bottom:4,left:4}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmtK(ctx.raw)+' кг';}}}},
+        scales:{
+          x:{ticks:{font:{size:9},callback:function(v){return fmtI(v);}},grid:{color:'#eee'}},
+          y:{ticks:{font:{size:11},color:'#111',padding:4},grid:{display:false}}
+        },
+        animation:false, responsive:true, maintainAspectRatio:false
+      },
+      plugins:[VLP]
+    });
+  }
+}
+
+/* =============================================================
+   RENDER: SHIFT SLIDE
+   ============================================================= */
+function renderShift(elId, title, uk, fsuf){
+  var shifts = calcShifts(uk);
+  var tot = shifts.reduce(function(s,d){return s+d.v;},0);
+  var container = document.getElementById(elId);
+  container.innerHTML = '';
+  var cId = elId+'p';
+  var yr = getYr(MONTH);
+  var period = MONTH+'\n'+yr;
+
+  container.appendChild(makeHead(title, period));
+
+  // Body fills remaining height: pie left, cards right
+  var body = el('div',null,{
+    height:'646px',
+    padding:'14px 20px 12px',
+    display:'flex', gap:'32px', alignItems:'stretch', overflow:'hidden'
+  });
+
+  // Left: donut chart — fixed square, vertically centred
+  var chartBox = el('div',null,{
+    flexShrink:'0', width:'360px', display:'flex',
+    flexDirection:'column', alignItems:'center', justifyContent:'center'
+  });
+  var cvs = document.createElement('canvas');
+  cvs.id = cId;
+  cvs.style.cssText = 'width:340px;height:340px;';
+  cvs.width = 340; cvs.height = 340;
+  chartBox.appendChild(cvs);
+  body.appendChild(chartBox);
+
+  // Right: cards fill all available space
+  var cardsWrap = el('div',null,{
+    flex:'1', display:'flex', flexDirection:'column',
+    gap:'0', justifyContent:'space-between'
+  });
+
+  if(!shifts.length || tot===0){
+    var noData = el('div',null,{color:'#aaa',padding:'20px',textAlign:'center'},'Нет данных по сменам');
+    cardsWrap.appendChild(noData);
+  } else {
+    // Title row
+    var sTitle = el('div',null,{
+      fontSize:'13px',fontWeight:'700',color:'#333',marginBottom:'10px'
+    },'Распределение брака по сменам (кг) — '+uk);
+    cardsWrap.appendChild(sTitle);
+
+    // Cards wrapper that fills the space evenly
+    var cardsList = el('div',null,{display:'flex',flexDirection:'column',gap:'8px',flex:'1'});
+    shifts.forEach(function(s,i){
+      var card = el('div',null,{
+        borderRadius:'6px',
+        padding:'10px 14px',
+        background: i===0 ? '#1a1a2e' : '#2d3748',
+        color:'#fff',
+        flex:'1'
+      });
+      var row = el('div',null,{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'7px',gap:'8px'});
+      var name = el('span',null,{
+        fontSize:'13px', fontWeight:i===0?'700':'500',
+        color:i===0?'#E65100':'#fff', lineHeight:'1.2'
+      }, s.n);
+      var right = el('span',null,{display:'flex',alignItems:'baseline',gap:'6px',whiteSpace:'nowrap'});
+      var kgEl = el('span',null,{fontSize:'15px',fontWeight:'700'}, fmtI(s.v)+' кг');
+      var pctEl = el('span',null,{fontSize:'12px',opacity:'0.65'}, s.pct+'%');
+      app(right, kgEl, pctEl);
+      app(row, name, right);
+      var barBg = el('div',null,{background:'rgba(255,255,255,.14)',height:'6px',borderRadius:'3px'});
+      var barFg = el('div',null,{width:s.pct+'%',height:'100%',borderRadius:'3px',background:PP[i%PP.length]});
+      barBg.appendChild(barFg);
+      app(card, row, barBg);
+      cardsList.appendChild(card);
+    });
+    cardsWrap.appendChild(cardsList);
+  }
+  body.appendChild(cardsWrap);
+  container.appendChild(body);
+  container.appendChild(makeFoot('АО «Завод Продмаш» | ОРСМК | '+fsuf));
+
+  destroyCh(cId);
+  if(!shifts.length || tot===0) return;
+
+  setTimeout(function(){
+    var c = document.getElementById(cId);
+    if(!c) return;
+    destroyCh(cId);
+    CH[cId] = new Chart(c.getContext('2d'),{
+      type:'doughnut',
+      data:{
+        labels: shifts.map(function(s){return s.n;}),
+        datasets:[{
+          data: shifts.map(function(s){return s.v;}),
+          backgroundColor: PP.slice(0,shifts.length),
+          borderWidth:3, borderColor:'#fff', hoverOffset:6
+        }]
+      },
+      options:{
+        cutout:'50%',
+        plugins:{
+          legend:{
+            position:'bottom',
+            labels:{
+              font:{size:11}, boxWidth:13, padding:10,
+              generateLabels:function(chart){
+                return chart.data.labels.map(function(lbl,i){
+                  return {
+                    text:lbl+': '+fmtI(chart.data.datasets[0].data[i])+' кг',
+                    fillStyle:PP[i%PP.length], hidden:false, index:i
+                  };
+                });
+              }
+            }
+          },
+          tooltip:{callbacks:{label:function(ctx){
+            var t=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+            return ctx.label+': '+fmtI(ctx.raw)+' кг ('+(t>0?Math.round(ctx.raw/t*100):0)+'%)';
+          }}}
+        },
+        animation:{duration:300}
+      },
+      plugins:[DLP]
+    });
+  }, 80);
+}
+
+/* =============================================================
+   RENDER: SUMMARY SLIDE
+   ============================================================= */
+function renderSum(period){
+  var UNITS = ['УПН','УМИ 8,9,11','УМИ 2,4','ЦГЦ'];
+  var ST = {};
+  UNITS.forEach(function(u){ ST[u]=calcStats(u,MONTH); });
+  var totAll = UNITS.reduce(function(s,u){return s+ST[u].tot;},0);
+
+  var leadSh = UNITS.map(function(u){
+    var filtered = ST[u].sh.filter(function(s){
+      var nl=s.n.toLowerCase();
+      return nl.indexOf('невозможно')<0 && nl.indexOf('работе')<0 && nl.indexOf('отработ')<0;
+    });
+    return filtered.length ? filtered[0] : {n:'—',v:0};
+  });
+
+  var container = document.getElementById('sl-sum');
+  container.innerHTML = '';
+
+  container.appendChild(makeHead('СВОДНЫЙ АНАЛИЗ — УМИ · УПН · ЦГЦ', period));
+
+  var totLine = el('div','sum-total', null, 'Всего НП: '+fmtK(totAll)+' кг');
+  container.appendChild(totLine);
+
+  // Unit cards
+  var ucRow = el('div','sum-ucards');
+  UNITS.forEach(function(u){
+    var card = el('div','sum-uc');
+    card.style.background = UC[u];
+    app(card, el('div','sum-uc-label',null,u), el('div','sum-uc-val',null,fmtK(ST[u].tot)+' кг'));
+    ucRow.appendChild(card);
+  });
+  container.appendChild(ucRow);
+
+  // 3 charts — явная высота чтобы canvas не схлопывался
+  var CHART_H = 280; // высота области графика в px
+  var grid = el('div','sum-grid');
+  ['sc1','sc2','sc3'].forEach(function(id){
+    var box = el('div','sum-chart-box');
+    var titles = ['Масса НП по участкам, кг','Лидирующая смена по участкам, кг','Продуктовые направления, кг'];
+    var idx = parseInt(id.replace('sc',''))-1;
+    box.appendChild(makeSH(titles[idx]));
+    // Явная высота — canvas не схлопнется
+    var wrap = el('div',null,{position:'relative', height:CHART_H+'px', width:'100%'});
+    var cvs = document.createElement('canvas');
+    cvs.id = id;
+    cvs.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+    wrap.appendChild(cvs);
+    box.appendChild(wrap);
+    grid.appendChild(box);
+  });
+  container.appendChild(grid);
+
+  // Key defects
+  var defWrap = el('div','sum-defects');
+  defWrap.appendChild(makeSH('Ключевые дефекты по участкам'));
+  UNITS.forEach(function(u){
+    var td=ST[u].td, t=ST[u].tot||1;
+    var line = td.slice(0,3).map(function(d){return d.n+' — '+(d.v/t*100).toFixed(1)+'%';}).join(' · ');
+    var row = el('div','def-row');
+    var badge = el('div','def-badge');
+    badge.style.background = UC[u];
+    badge.textContent = u;
+    var txt = el('div','def-text',null, line||'—');
+    app(row, badge, txt);
+    defWrap.appendChild(row);
+  });
+  container.appendChild(defWrap);
+  container.appendChild(makeFoot('АО «Завод Продмаш» | ОРСМК | '+period.replace('\n',' ')));
+
+  ['sc1','sc2','sc3'].forEach(destroyCh);
+
+  function mkBar(id, labels, data, colors, fmtFn, subLbls){
+    var mx = Math.max.apply(null, data.filter(function(v){return v>0;}).concat([1]));
+    var plugins = [VLP];
+    if(subLbls){
+      plugins.push({
+        id:'sl_'+id,
+        afterDatasetsDraw:function(chart){
+          var ctx=chart.ctx; ctx.save();
+          ctx.font='bold 10px Calibri'; ctx.fillStyle='#444'; ctx.textAlign='center';
+          chart.getDatasetMeta(0).data.forEach(function(bar,i){
+            if(subLbls[i] && data[i]>0) ctx.fillText(subLbls[i], bar.x, chart.chartArea.bottom+15);
+          });
+          ctx.restore();
+        }
+      });
+    }
+    CH[id] = new Chart(document.getElementById(id).getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:labels,
+        datasets:[{
+          data:data, backgroundColor:colors, borderRadius:5,
+          _fmt: fmtFn || function(v){return fmtI(v)+' кг';}
+        }]
+      },
+      options:{
+        layout:{padding:{top:26, bottom:subLbls?22:6, left:4, right:4}},
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:function(ctx){ return fmtFn ? fmtFn(ctx.raw) : fmtI(ctx.raw)+' кг'; }}}
+        },
+        scales:{
+          x:{ticks:{font:{size:10},color:'#222'},grid:{display:false}},
+          y:{max:mx*1.3, ticks:{font:{size:9},callback:function(v){return fmtI(v);}}, grid:{color:'#ececec'}}
+        },
+        animation:false, responsive:true, maintainAspectRatio:false
+      },
+      plugins:plugins
+    });
+  }
+
+  mkBar('sc1', UNITS, UNITS.map(function(u){return Math.round(ST[u].tot);}), UNITS.map(function(u){return UC[u];}));
+
+  // sc2: лидирующая смена
+  // Ось X: только короткие названия участков (без смены)
+  // Под столбиком — название смены отдельным плагином
+  var shShort = leadSh.map(function(s){
+    var sl=s.n.toLowerCase();
+    if(sl.indexOf('смена а')>=0) return 'Смена А';
+    if(sl.indexOf('смена б')>=0) return 'Смена Б';
+    if(sl.indexOf('смена в')>=0) return 'Смена В';
+    if(sl.indexOf('невозможно')>=0) return 'Невозм.';
+    return s.n.length>8 ? s.n.slice(0,8)+'…' : s.n;
+  });
+  var unitShortX = ['УПН','УМИ\n8,9,11','УМИ 2,4','ЦГЦ'];
+  CH['sc2'] = new Chart(document.getElementById('sc2').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels: ['УПН','УМИ 8,9,11','УМИ 2,4','ЦГЦ'],
+      datasets:[{
+        data: leadSh.map(function(s){return Math.round(s.v);}),
+        backgroundColor: leadSh.map(function(s){return shCol(s.n);}),
+        borderRadius:5,
+        _fmt: function(v){return fmtI(v)+' кг';}
+      }]
+    },
+    options:{
+      layout:{padding:{top:26, bottom:36, left:4, right:4}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){
+          return leadSh[ctx.dataIndex].n+': '+fmtI(leadSh[ctx.dataIndex].v)+' кг';
+        }}}
+      },
+      scales:{
+        x:{ticks:{font:{size:9.5},color:'#222',maxRotation:0,autoSkip:false},grid:{display:false}},
+        y:{
+          max: Math.max.apply(null, leadSh.map(function(s){return s.v;}).concat([1]))*1.35,
+          ticks:{font:{size:9},callback:function(v){return fmtI(v);}},
+          grid:{color:'#ececec'}
+        }
+      },
+      animation:false, responsive:true, maintainAspectRatio:false
+    },
+    plugins:[VLP, {
+      id:'sc2sub',
+      afterDatasetsDraw:function(chart){
+        var ctx2=chart.ctx; ctx2.save();
+        ctx2.font='9px Calibri'; ctx2.fillStyle='#444'; ctx2.textAlign='center';
+        chart.getDatasetMeta(0).data.forEach(function(bar,i){
+          if(leadSh[i].v>0)
+            ctx2.fillText('('+shShort[i]+')', bar.x, chart.chartArea.bottom+26);
+        });
+        ctx2.restore();
+      }
+    }]
+  });
+
+  // sc3: топ-1 продуктовое направление по каждому участку
+  var top1 = UNITS.map(function(u){
+    return ST[u].tg.length ? ST[u].tg[0] : {n:'—', v:0};
+  });
+  var top1vals = top1.map(function(g){ return Math.round(g.v); });
+  var mxT = Math.max.apply(null, top1vals.concat([1]));
+
+  destroyCh('sc3');
+  CH['sc3'] = new Chart(document.getElementById('sc3').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels: UNITS,
+      datasets:[{
+        data: top1vals,
+        backgroundColor: UNITS.map(function(u){ return UC[u]; }),
+        borderRadius: 5,
+        _fmt: function(v){ return fmtI(v)+' кг'; }
+      }]
+    },
+    options:{
+      layout:{ padding:{ top:28, bottom:4, left:4, right:4 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:function(ctx){
+          return UNITS[ctx.dataIndex]+' / '+top1[ctx.dataIndex].n+': '+fmtI(ctx.raw)+' кг';
+        }}}
+      },
+      scales:{
+        x:{
+          display: false   // убираем ось X полностью — всё пишем внутри баров
+        },
+        y:{ max: mxT*1.3,
+            ticks:{ font:{size:9}, callback:function(v){ return fmtI(v); } },
+            grid:{ color:'#ececec' } }
+      },
+      animation:false, responsive:true, maintainAspectRatio:false
+    },
+    plugins:[
+      VLP,
+      {
+        id:'sc3labels',
+        afterDatasetsDraw:function(chart){
+          var ctx2=chart.ctx; ctx2.save();
+          var meta = chart.getDatasetMeta(0);
+          meta.data.forEach(function(bar,i){
+            if(!top1vals[i]) return;
+            var barH = chart.chartArea.bottom - bar.y;
+            var bW = bar.width;
+            ctx2.textAlign = 'center';
+
+            // Строка 1: название участка (белый жирный)
+            ctx2.font = 'bold 11px Calibri';
+            ctx2.fillStyle = 'rgba(255,255,255,0.95)';
+            if(barH > 42){
+              ctx2.fillText(UNITS[i], bar.x, chart.chartArea.bottom - barH*0.5 - 7);
+            }
+
+            // Строка 2: название направления (белый обычный, обрезаем по ширине)
+            if(barH > 24){
+              ctx2.font = '9.5px Calibri';
+              var name = top1[i].n;
+              var maxW = bW - 6;
+              while(ctx2.measureText(name).width > maxW && name.length > 2){
+                name = name.slice(0,-1);
+              }
+              if(name !== top1[i].n) name = name.slice(0,-1)+'…';
+              ctx2.fillText(name, bar.x, chart.chartArea.bottom - barH*0.5 + 8);
+            }
+          });
+          ctx2.restore();
+        }
+      }
+    ]
+  });
+} // end renderSum
+
+/* =============================================================
+   MAIN RENDER
+   ============================================================= */
+function renderAll(){
+  MONTH = document.getElementById('monthSel').value || MONTH;
+  if(!RECS.length) return;
+  var yr = getYr(MONTH);
+  var p = MONTH+'\n'+yr;
+  renderUnit('sl-upn',   'УПН — Несоответствующая продукция',          'УПН',       'УПН — к. 7, 9, 13',         p);
+  renderUnit('sl-umi811','УМИ 8,9,11 к. — Несоответствующая продукция','УМИ 8,9,11','УМИ 8,9,11 — к. 8, 9, 11', p);
+  renderUnit('sl-umi24', 'УМИ 2,4 к. — Несоответствующая продукция',   'УМИ 2,4',   'УМИ 2,4 — к. 2, 4',         p);
+  renderUnit('sl-cgc',   'ЦГЦ (ЦЦ) — Несоответствующая продукция',     'ЦГЦ',       'ЦГЦ — ЦЦ БЛ / АЛМЦ / к. 1', p);
+  renderShift('sl-sh_upn','УПН — Несоответствующая продукция',          'УПН',       'УПН — к. 7, 9, 13');
+  renderShift('sl-sh_umi','УМИ — Несоответствующая продукция',          'УМИ 8,9,11','УМИ');
+  renderShift('sl-sh_cgc','ЦГЦ (ЦЦ) — Несоответствующая продукция',    'ЦГЦ',       'ЦГЦ — ЦЦ БЛ / АЛМЦ / к. 1');
+  renderSum(p);
+  applyTabs();
+}
+
+/* =============================================================
+   TABS
+   ============================================================= */
+var TM = {
+  all:['sl-upn','sl-umi811','sl-umi24','sl-cgc','sl-sh_upn','sl-sh_umi','sl-sh_cgc','sl-sum'],
+  upn:['sl-upn'], umi811:['sl-umi811'], umi24:['sl-umi24'], cgc:['sl-cgc'],
+  sh_upn:['sl-sh_upn'], sh_umi:['sl-sh_umi'], sh_cgc:['sl-sh_cgc'], sum:['sl-sum']
+};
+var AIDS = ['sl-upn','sl-umi811','sl-umi24','sl-cgc','sl-sh_upn','sl-sh_umi','sl-sh_cgc','sl-sum'];
+
+function setTab(btn){
+  CUR_TAB = btn.getAttribute('data-tab');
+  document.querySelectorAll('.tab').forEach(function(t){ t.className='tab'; });
+  btn.className = 'tab tab-active';
+  applyTabs();
+}
+function applyTabs(){
+  var vis = TM[CUR_TAB] || AIDS;
+  AIDS.forEach(function(id){
+    var e=document.getElementById(id);
+    if(e) e.className = vis.indexOf(id)>=0 ? 'slide' : 'slide slide-hidden';
+  });
+}
+
+/* =============================================================
+   PDF EXPORT
+   ============================================================= */
+function exportPdf(){
+  var jsPDF = window.jspdf && window.jspdf.jsPDF;
+  if(!jsPDF){ alert('Библиотека jsPDF не загружена. Проверьте подключение к интернету.'); return; }
+
+  var visIds = AIDS.filter(function(id){
+    var e=document.getElementById(id);
+    return e && e.className.indexOf('slide-hidden')<0;
+  });
+  if(!visIds.length){ alert('Нет слайдов для сохранения.'); return; }
+
+  // Показываем все слайды для рендера
+  var wasHid = [];
+  AIDS.forEach(function(id){
+    var e=document.getElementById(id);
+    if(e && e.className.indexOf('slide-hidden')>=0){ e.className='slide'; wasHid.push(id); }
+  });
+
+  var ovl = document.getElementById('pdfOvl');
+  var msg = document.getElementById('pdfMsg');
+  var bar = document.getElementById('pdfBar');
+  ovl.className = 'pdf-overlay pdf-overlay-show';
+
+  var pdf = new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
+  var PW=297, PH=210, MG=6;
+  var cW=PW-MG*2, cH=PH-MG*2;
+  var si = 0;
+
+  function nextSlide(){
+    if(si >= visIds.length){
+      bar.style.width = '100%';
+      msg.textContent = 'Сохранение...';
+      setTimeout(function(){
+        var fname = '15min_'+(MONTH||'отчет')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+        pdf.save(fname);
+        wasHid.forEach(function(id){ var e=document.getElementById(id); if(e) e.className='slide slide-hidden'; });
+        ovl.className = 'pdf-overlay';
+        bar.style.width = '0';
+      }, 200);
+      return;
+    }
+    var id = visIds[si];
+    var elem = document.getElementById(id);
+    msg.textContent = 'Слайд '+(si+1)+' из '+visIds.length+'...';
+    bar.style.width = Math.round(si/visIds.length*100)+'%';
+    setTimeout(function(){
+      html2canvas(elem,{
+        scale:3, useCORS:true, logging:false, backgroundColor:'#ffffff',
+        width:elem.offsetWidth, height:elem.offsetHeight, scrollX:0, scrollY:-window.scrollY
+      }).then(function(cvs){
+        if(si>0) pdf.addPage('a4','landscape');
+        var iW=cvs.width, iH=cvs.height;
+        var dW=cW, dH=dW*(iH/iW);
+        if(dH>cH){dH=cH; dW=dH*(iW/iH);}
+        var ox=MG+(cW-dW)/2, oy=MG+(cH-dH)/2;
+        pdf.addImage(cvs.toDataURL('image/jpeg',0.96),'JPEG',ox,oy,dW,dH,undefined,'FAST');
+        si++;
+        nextSlide();
+      }).catch(function(err){
+        alert('Ошибка рендера слайда '+id+': '+err.message);
+        wasHid.forEach(function(id2){ var e=document.getElementById(id2); if(e) e.className='slide slide-hidden'; });
+        ovl.className='pdf-overlay';
+      });
+    }, 150);
+  }
+
+  nextSlide();
+}
+</script>
+</body>
+</html>
