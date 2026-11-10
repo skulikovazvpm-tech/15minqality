@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15-минутки качества | АО «Завод Продмаш»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --blue:#005EC4; --navy:#0A3D7A; --orange:#F4792A; --sky:#5B9BD5; --ink:#26323F;
+  --muted:#6B7A8C; --line:#DCE4EE; --bg:#EEF2F7; --soft:#F6F9FC;
+  --font:'Manrope','Segoe UI',Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;}
+
+/* ── Верхняя панель ── */
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:10px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(16,40,80,.06);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--navy));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;letter-spacing:.5px;}
+.brand-org{font-size:10.5px;font-weight:800;letter-spacing:1.2px;color:var(--blue);text-transform:uppercase;}
+.brand-title{font-size:17px;font-weight:800;color:var(--ink);}
+.tb-sp{flex:1;}
+.tb-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.tb-select{font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 12px;cursor:pointer;}
+.btn{font-family:var(--font);border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:800;white-space:nowrap;}
+.btn-up{background:var(--blue);color:#fff;}
+.btn-pdf{background:#fff;color:var(--blue);border:1px solid var(--line);}
+.btn-pdf:disabled{opacity:.45;cursor:not-allowed;}
+
+.infobar{margin:14px 22px 0;padding:10px 14px;font-size:13px;border-radius:10px;border:1px solid;}
+.infobar-demo{background:#FFF8EC;border-color:#F8D7A8;color:#7A4A12;}
+.infobar-ok{background:#EEF8F1;border-color:#BFE3CB;color:#1E6B3A;}
+.infobar-err{background:#FDEEEE;border-color:#F3C2C2;color:#9B2C2C;}
+
+.tabs{margin:14px 22px 0;display:flex;gap:6px;flex-wrap:wrap;}
+.tab{font-family:var(--font);background:#fff;color:#3d4a57;border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:12.5px;font-weight:700;}
+.tab-active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.tab-sep{width:1px;background:var(--line);margin:0 4px;}
+
+.slides-wrap{padding:22px;display:flex;flex-direction:column;align-items:center;gap:26px;}
+#empty{max-width:640px;margin:60px auto;text-align:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:44px 30px;box-shadow:0 6px 24px rgba(16,40,80,.06);}
+#empty h2{font-size:22px;font-weight:800;margin-bottom:10px;}
+#empty p{color:var(--muted);font-size:14px;line-height:1.6;}
+#loading{display:none;text-align:center;padding:40px;color:var(--muted);font-size:14px;font-weight:600;}
+
+/* ── Слайд в пропорции листа A4 (альбомная ориентация) ── */
+.slide{width:1280px;height:890px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,40,80,.12);display:flex;flex-direction:column;position:relative;flex-shrink:0;}
+.slide-hidden{display:none!important;}
+.s-head{height:62px;background:var(--blue);display:flex;align-items:center;padding:0 26px;gap:16px;flex-shrink:0;position:relative;overflow:hidden;}
+.s-chev{position:absolute;top:0;width:26px;height:62px;background:rgba(255,255,255,.16);clip-path:polygon(0 0,55% 0,100% 50%,55% 100%,0 100%,45% 50%);}
+.s-logo{color:#fff;font-weight:900;font-size:19px;letter-spacing:.4px;}
+.s-title{color:#fff;font-weight:800;font-size:21px;margin-left:64px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.s-title small{font-weight:600;opacity:.8;font-size:14px;margin-left:8px;}
+.s-period{background:var(--orange);color:#fff;font-weight:800;font-size:14px;padding:7px 14px;border-radius:9px;white-space:nowrap;}
+.s-body{flex:1;padding:16px 24px 10px;display:flex;flex-direction:column;gap:12px;min-height:0;}
+.s-foot{height:30px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:11px;font-weight:600;color:#8A97A6;flex-shrink:0;}
+
+/* KPI */
+.kpis{display:grid;gap:12px;flex-shrink:0;}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 14px 10px 16px;position:relative;background:#fff;overflow:hidden;}
+.kpi-bar{position:absolute;left:0;top:0;bottom:0;width:5px;}
+.kpi-l{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.kpi-v{font-size:26px;font-weight:900;line-height:1.15;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.kpi-v small{font-size:14px;font-weight:700;margin-left:3px;color:var(--muted);}
+.kpi-s{font-size:11.5px;font-weight:700;margin-top:3px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.d-up{color:#C0392B;} .d-down{color:#2E9A5B;} .d-flat{color:var(--muted);}
+
+/* Карточки графиков */
+.grid{display:grid;gap:12px;flex:1;min-height:0;}
+.card{border:1px solid var(--line);border-radius:12px;padding:10px 14px 8px;display:flex;flex-direction:column;min-height:0;min-width:0;background:#fff;}
+.card-t{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.card-t i{display:inline-block;width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.card-t span{font-weight:600;color:var(--muted);font-size:11.5px;margin-left:auto;}
+.cbox{position:relative;flex:1;min-height:0;}
+.cbox canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+.nodata{color:#9AA6B2;font-size:12.5px;font-weight:600;padding:10px 0;}
+
+/* Легенда кольца */
+.donut-wrap{display:flex;gap:12px;flex:1;min-height:0;align-items:center;}
+.donut-wrap .cbox{flex:0 0 42%;height:100%;}
+.leg{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.leg-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.leg-n{flex:1;min-width:0;color:#3d4a57;font-weight:600;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.leg-v{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.leg-p{color:var(--muted);font-weight:700;width:38px;text-align:right;font-variant-numeric:tabular-nums;}
+
+/* Тепловая карта смена × дефект */
+.hm{width:100%;border-collapse:separate;border-spacing:3px;font-size:11.5px;table-layout:fixed;}
+.hm th{font-weight:800;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;padding:2px 4px;text-align:center;}
+.hm th.hm-rowh{text-align:left;}
+.hm td{border-radius:6px;padding:6px 3px;text-align:center;font-weight:800;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.hm td.hm-name{text-align:left;font-weight:600;color:#3d4a57;background:transparent;padding-left:0;line-height:1.25;white-space:normal;font-size:11.5px;overflow:hidden;}
+
+/* Карточки смен */
+.sh-list{display:flex;flex-direction:column;gap:9px;flex:1;min-height:0;}
+.sh-card{border:1px solid var(--line);border-radius:12px;padding:10px 14px 10px 18px;position:relative;flex:0 1 112px;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+.sh-card .kpi-bar{width:6px;}
+.sh-top{display:flex;align-items:baseline;gap:10px;}
+.sh-name{font-size:15px;font-weight:800;flex:1;}
+.sh-kg{font-size:19px;font-weight:900;font-variant-numeric:tabular-nums;}
+.sh-pct{font-size:13px;font-weight:800;color:var(--muted);width:44px;text-align:right;}
+.sh-track{height:7px;background:#EDF1F6;border-radius:4px;margin:7px 0 6px;overflow:hidden;}
+.sh-fill{height:100%;border-radius:4px;}
+.sh-meta{display:flex;gap:16px;font-size:11.5px;font-weight:600;color:var(--muted);}
+.sh-meta b{color:var(--ink);font-weight:800;}
+.sh-lead{display:inline-block;vertical-align:middle;margin-left:10px;font-size:10px;font-weight:900;letter-spacing:.6px;color:#fff;background:var(--orange);padding:2px 7px;border-radius:5px;text-transform:uppercase;}
+
+/* Сводка */
+.u-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex-shrink:0;}
+.u-tile{border-radius:12px;padding:12px 16px;color:#fff;position:relative;overflow:hidden;}
+.u-tile-n{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.9;}
+.u-tile-v{font-size:27px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
+.u-tile-v small{font-size:14px;font-weight:700;opacity:.85;margin-left:3px;}
+.u-tile-s{font-size:11.5px;font-weight:700;opacity:.92;margin-top:2px;}
+.def-list{display:flex;flex-direction:column;gap:7px;}
+.def-row{display:flex;gap:10px;align-items:flex-start;}
+.def-badge{border-radius:7px;padding:4px 9px;font-size:11.5px;font-weight:800;color:#fff;min-width:96px;text-align:center;flex-shrink:0;}
+.def-text{font-size:12px;line-height:1.45;color:#3d4a57;font-weight:600;}
+.def-text b{color:var(--ink);font-weight:800;}
+
+/* PDF */
+.pdf-overlay{display:none;position:fixed;inset:0;background:rgba(10,30,60,.55);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.pdf-overlay-show{display:flex;}
+.pdf-msg{color:#fff;font-size:15px;font-weight:700;}
+.pdf-bar-wrap{width:340px;height:8px;background:rgba(255,255,255,.25);border-radius:4px;overflow:hidden;}
+.pdf-bar{height:100%;background:var(--orange);border-radius:4px;transition:width .25s;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">ПМ</div>
+    <div><div class="brand-org">АО «Завод Продмаш» · ОРСМК</div><div class="brand-title">15-минутки качества</div></div>
+  </div>
+  <div class="tb-sp"></div>
+  <span class="tb-label">Период</span>
+  <select id="monthSel" class="tb-select" onchange="renderAll()"></select>
+  <button class="btn btn-up" onclick="document.getElementById('fi').click()">📂 Загрузить XLSX</button>
+  <input type="file" id="fi" accept=".xlsx,.xls" style="display:none" onchange="loadFile(event)">
+  <button class="btn btn-pdf" id="btnPdf" onclick="exportPdf()" disabled>⬇ Сохранить PDF</button>
+</div>
+
+<div id="infoBar" class="infobar infobar-demo">
+  ℹ️ <b>Данные не загружены.</b> Загрузите XLSX-файл реестра несоответствий.
+  Нужные колонки: <b>Номер · Дата · Склад (место возникновения) · Кол., кг · Вид несоответствия · Критичность · Ответственная смена · Группа номенклатуры</b>.
+  Дополнительно используются: Номенклатура, Место проведения контроля, Коренная причина возникновения.
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab tab-active" data-tab="all" onclick="setTab(this)">Все слайды</button>
+  <span class="tab-sep"></span>
+  <button class="tab" data-tab="upn" onclick="setTab(this)">УПН</button>
+  <button class="tab" data-tab="umi811" onclick="setTab(this)">УМИ 8, 9, 11</button>
+  <button class="tab" data-tab="umi24" onclick="setTab(this)">УМИ 2, 4</button>
+  <button class="tab" data-tab="cgc" onclick="setTab(this)">ЦГЦ</button>
+  <span class="tab-sep"></span>
+  <button class="tab" data-tab="sh_upn" onclick="setTab(this)">УПН — смены</button>
+  <button class="tab" data-tab="sh_umi" onclick="setTab(this)">УМИ — смены</button>
+  <button class="tab" data-tab="sh_cgc" onclick="setTab(this)">ЦГЦ — смены</button>
+  <span class="tab-sep"></span>
+  <button class="tab" data-tab="sum" onclick="setTab(this)">Сводный анализ</button>
+</div>
+
+<div id="loading">⏳ Обработка файла…</div>
+<div id="empty"><h2>📊 Загрузите XLSX-файл</h2><p>Нажмите «Загрузить XLSX» в верхней панели и выберите реестр несоответствий (выгрузку актов из 1С).<br>Если в файле несколько месяцев, на слайдах появится сравнение с предыдущим месяцем.</p></div>
+<div class="slides-wrap" id="slidesWrap" style="display:none"></div>
+
+<div id="pdfOvl" class="pdf-overlay">
+  <div class="pdf-msg" id="pdfMsg">Подготовка…</div>
+  <div class="pdf-bar-wrap"><div class="pdf-bar" id="pdfBar" style="width:0"></div></div>
+</div>
+
+<script>
+/* =============================================================
+   ВАЖНО: в скриптах нет строк с атрибутом класса в разметке —
+   все элементы строятся через createElement (className задаётся свойством).
+   ============================================================= */
+var MRU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+var MRU_D = ['январю','февралю','марту','апрелю','маю','июню','июлю','августу','сентябрю','октябрю','ноябрю','декабрю'];
+var MRU_P = ['январем','февралем','мартом','апрелем','маем','июнем','июлем','августом','сентябрем','октябрем','ноябрем','декабрем'];
+
+/* Фирменная палитра (как в основном приложении аналитики) */
+var COL = { blue:'#005EC4', navy:'#0A3D7A', orange:'#F4792A', sky:'#5B9BD5', light:'#9DC3E6', green:'#2E9A5B',
+            amber:'#F5B800', grey:'#A5A5A5', slate:'#6B7681', rust:'#C55A11', peach:'#F9A45C', mint:'#6FBF8E', ink:'#26323F' };
+var PAL = [COL.blue, COL.orange, COL.sky, COL.navy, COL.green, COL.peach, COL.slate, COL.rust, COL.light, COL.amber, COL.mint];
+
+/* Участки */
+var UNITS = [
+  {k:'УПН',        id:'upn',    name:'УПН',          sub:'корпуса 7, 9, 13',          color:COL.orange},
+  {k:'УМИ 8,9,11', id:'umi811', name:'УМИ 8, 9, 11', sub:'корпуса 8, 9, 11',          color:COL.blue},
+  {k:'УМИ 2,4',    id:'umi24',  name:'УМИ 2, 4',     sub:'корпуса 2, 4',              color:COL.navy},
+  {k:'ЦГЦ',        id:'cgc',    name:'ЦГЦ (ЦЦ)',     sub:'ЦЦ БЛ / АЛМЦ / корпус 1',   color:COL.sky}
+];
+var SHIFT_SLIDES = [
+  {id:'sh_upn', k:'УПН',        name:'УПН',          sub:'корпуса 7, 9, 13'},
+  {id:'sh_umi', k:'УМИ 8,9,11', name:'УМИ 8, 9, 11', sub:'корпуса 8, 9, 11'},
+  {id:'sh_cgc', k:'ЦГЦ',        name:'ЦГЦ (ЦЦ)',     sub:'ЦЦ БЛ / АЛМЦ / корпус 1'}
+];
+/* Критичность */
+var CRIT_COL = {'Устранено':COL.mint,'Малозначительное':COL.blue,'Устранимое':COL.sky,'Неустранимое':COL.orange,'В работе':COL.amber,'Отработка технологии':COL.green};
+/* Смены — детальная разбивка: каждая смена и каждое сочетание смен отдельно;
+   «В работе», «Отработка технологии», «Невозможно установить» — отдельные категории */
+var SHIFT_ORDER = ['Смена А','Смена Б','Смена В','Смены А+Б','Смены А+В','Смены Б+В','Смены А+Б+В','В работе','Отработка технологии','Невозможно установить'];
+var SHIFT_COL = {'Смена А':COL.blue,'Смена Б':COL.orange,'Смена В':COL.sky,'Смены А+Б':COL.navy,'Смены А+В':COL.light,'Смены Б+В':COL.rust,'Смены А+Б+В':COL.slate,
+                 'В работе':COL.amber,'Отработка технологии':COL.green,'Невозможно установить':COL.grey};
+
+var RECS = [], MKEY = null, CUR_TAB = 'all', CH = {};
+
+/* ---------- Форматирование ---------- */
+function fmtK(v){ return (v==null||isNaN(v)) ? '—' : Number(v).toLocaleString('ru-RU',{minimumFractionDigits:0,maximumFractionDigits:1}).replace(/\u00a0/g,' '); }
+function fmtI(v){ return (v==null||isNaN(v)) ? '—' : Math.round(v).toLocaleString('ru-RU').replace(/\u00a0/g,' '); }
+function pct(a,b){ return b>0 ? Math.round(a/b*100) : 0; }
+function noYo(s){ return String(s==null?'':s).replace(/ё/g,'е').replace(/Ё/g,'Е'); }
+
+/* ---------- DOM-помощник ---------- */
+function h(tag, o, kids){
+  var e = document.createElement(tag);
+  o = o || {};
+  if(o.cls) e.className = o.cls;
+  if(o.st) Object.assign(e.style, o.st);
+  if(o.text != null) e.textContent = o.text;
+  if(o.html != null) e.innerHTML = o.html;
+  if(o.id) e.id = o.id;
+  (kids||[]).forEach(function(k){ if(k) e.appendChild(k); });
+  return e;
+}
+
+/* =============================================================
+   ЗАГРУЗКА ФАЙЛА
+   ============================================================= */
+function loadFile(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('slidesWrap').style.display = 'none';
+  document.getElementById('empty').style.display = 'none';
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      var wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array', cellDates:true});
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
+      var parsed = parseRows(rows);
+      if(!parsed || !parsed.length){
+        setInfo('err','Не удалось распознать файл. Проверьте наличие колонок: Номер, Кол., кг, Склад (место возникновения).');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('empty').style.display = 'block';
+        return;
+      }
+      RECS = parsed;
+      buildSel();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('slidesWrap').style.display = 'flex';
+      renderAll();
+      document.getElementById('btnPdf').disabled = false;
+      var ms = [], seen = {};
+      parsed.forEach(function(r){ if(r.mk && !seen[r.mk]){ seen[r.mk]=1; ms.push(r.mk); } });
+      ms.sort();
+      setInfo('ok','Загружено строк: '+parsed.length+'. Периоды в файле: '+ms.map(mkLabel).join(', ')+'.');
+    } catch(err){
+      setInfo('err','Ошибка: '+err.message);
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('empty').style.display = 'block';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+}
+function setInfo(type, txt){
+  var b = document.getElementById('infoBar');
+  b.className = 'infobar infobar-'+type;
+  b.textContent = (type==='err'?'⚠️ ':type==='ok'?'✅ ':'ℹ️ ') + txt;
+}
+
+/* =============================================================
+   РАЗБОР ФАЙЛА (правила отнесения к участкам и критичности — прежние)
+   ============================================================= */
+var RE_DATE = /(\d{1,2})\.(\d{1,2})\.(\d{4})/;
+function parseDate(c){
+  if(c instanceof Date && !isNaN(c)) return new Date(c.getFullYear(), c.getMonth(), c.getDate() + (c.getHours()>=12?1:0));
+  if(typeof c === 'number'){ var p = XLSX.SSF.parse_date_code(c); if(p) return new Date(p.y, p.m-1, p.d); }
+  var m = String(c||'').match(RE_DATE);
+  return m ? new Date(+m[3], +m[2]-1, +m[1]) : null;
+}
+function normCrit(c){
+  c = String(c||'').trim();
+  if((c.indexOf('Неустранимое')>=0 && c.indexOf('Устранимое')>=0) || (c.indexOf('Малозначительное')>=0 && c.indexOf('Устранимое')>=0)) return 'Устранимое';
+  if(c.indexOf('Малозначительное')>=0 && c.indexOf('Неустранимое')>=0) return 'Неустранимое';
+  if(c.indexOf('Неустранимое')>=0) return 'Неустранимое';
+  if(c.indexOf('Малозначительное')>=0) return 'Малозначительное';
+  if(c.indexOf('Устранимое')>=0) return 'Устранимое';
+  if(c.indexOf('В работе')>=0) return 'В работе';
+  if(c.indexOf('Отработка')>=0) return 'Отработка технологии';
+  return c || 'Не указана';
+}
+function mapUnit(sk, sh){
+  var s=String(sk||'').trim(), sl=s.toLowerCase(), sm=String(sh||'').toLowerCase();
+  if(sl.indexOf('уми')>=0){
+    if(s.indexOf('8')>=0 || s.indexOf('9')>=0 || s.indexOf('11')>=0) return 'УМИ 8,9,11';
+    if(s.indexOf('2')>=0 || s.indexOf('4')>=0) return 'УМИ 2,4';
+    return 'УМИ 8,9,11';
+  }
+  if(sl.indexOf('упн')>=0) return 'УПН';
+  if(sl.indexOf('цц')>=0) return 'ЦГЦ';
+  if(s==='Корпус №11' || s==='Корпус №9') return 'УМИ 8,9,11';
+  if(s==='Корпус №13' || s==='Корпус №07' || s==='Корпус №7') return 'УПН';
+  if(s==='Корпус №01' || s==='Корпус №1' || s==='Корпус №03' || s==='Корпус №3') return 'ЦГЦ';
+  if((s==='Корпус №02'||s==='Корпус №04'||s==='Корпус №2'||s==='Корпус №4') && sm.indexOf('уми')>=0) return 'УМИ 2,4';
+  return null; // Логистика, Не определено, ОЭУ — не входят в 15-минутку
+}
+/* Смена → категория (правила ОРСМК) */
+var UNSET = ['','невозможно установить','не определено','не установлено','нет','none','—','–','-'];
+function shiftCat(s){
+  var t = String(s||'').trim(), l = t.toLowerCase().replace(/\s+/g,' ');
+  if(UNSET.indexOf(l)>=0 || l.indexOf('невозможно')>=0) return 'Невозможно установить';
+  if(t.indexOf('+')>=0){
+    // «Смены А+Б УМИ», «Смена Б + В» → «Смены А+Б», «Смены Б+В» (буквы по порядку А, Б, В)
+    var seen = {}, lt = [];
+    (l.match(/(^|[\s+])([абв])(?=\s*\+|\s|$)/g) || []).forEach(function(x){ var c = x.replace(/[\s+]/g,''); if(!seen[c]){ seen[c]=1; lt.push(c); } });
+    lt.sort(function(a,b){ return 'абв'.indexOf(a)-'абв'.indexOf(b); });
+    return lt.length >= 2 ? 'Смены '+lt.map(function(c){ return c.toUpperCase(); }).join('+') : t;
+  }
+  if(l.indexOf('в работе')>=0 || l.indexOf('работе')>=0) return 'В работе';
+  if(l.indexOf('отработ')>=0) return 'Отработка технологии';
+  var m = l.match(/смен[аы]\s+([абв])(?![а-я])/);
+  if(m) return 'Смена '+m[1].toUpperCase();
+  return t;
+}
+function parseRows(rows){
+  if(rows.length < 2) return null;
+  var H = rows[0].map(function(x){ return String(x||'').trim(); });
+  function ci(){ for(var a=0;a<arguments.length;a++){ for(var b=0;b<H.length;b++){ if(H[b].indexOf(arguments[a])>=0) return b; } } return -1; }
+  function ex(name){ return H.indexOf(name); }
+  var iN=ci('Номер'), iD=ci('Дата'), iM=ci('Кол., кг'), iS=ci('Склад (место'),
+      iDf=ci('Вид несоотв'), iCr=ci('Критичность'), iSh=ci('Ответственная смена'),
+      iSrc=ci('Источник'), iG=ci('Группа номенклатуры'), iNm=ex('Номенклатура'),
+      iPl=ci('Место проведения'), iCo=ci('Коренная причина возник'), iCd=ci('Коренная причина необнар');
+  if(iN<0 || iM<0) return null;
+  var out = [], lastNom = '';
+  for(var i=1;i<rows.length;i++){
+    var r = rows[i];
+    var nom = String(r[iN]||'').trim();
+    if(!nom){ if(!lastNom) continue; nom = lastNom; } else lastNom = nom;
+    var isR = nom.charAt(0)==='В';
+    var mass = parseFloat(String(r[iM]||'0').replace(',','.').replace(/\s/g,''))||0;
+    if(mass<=0) continue;
+    var dt = iD>=0 ? parseDate(r[iD]) : null;
+    if(!dt) dt = parseDate(r[iN]);
+    var mk = dt ? dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0') : null;
+    var sk = iS>=0 ? String(r[iS]||'').trim() : '';
+    var sh = iSh>=0 ? String(r[iSh]||'').trim() : '';
+    var nc = nom.split(',')[0].trim(), doc = '', fc = nc.charAt(0);
+    if(fc==='И') doc='И'; else if(fc==='К') doc='К'; else if(fc==='С') doc='С'; else if(fc==='В') doc='В';
+    if(!doc && iSrc>=0){
+      var src = String(r[iSrc]||'').toLowerCase();
+      if(src.indexOf('инспекц')>=0) doc='И'; else if(src.indexOf('карт')>=0) doc='К'; else if(src.indexOf('само')>=0) doc='С';
+    }
+    function cell(ix){ return ix>=0 ? noYo(String(r[ix]==null?'':r[ix]).replace(/\s+/g,' ').trim()) : ''; }
+    out.push({ nom:nc, mass:mass, dt:dt, mk:mk, sk:sk, unit:isR?null:mapUnit(sk,sh), sh:sh, shc:shiftCat(sh),
+      df:cell(iDf), cr:iCr>=0?normCrit(r[iCr]):'Не указана', doc:doc, g:cell(iG), nm:cell(iNm), pl:cell(iPl),
+      co:cell(iCo), cd:cell(iCd), isR:isR });
+  }
+  return out.length ? out : null;
+}
+
+/* =============================================================
+   ПЕРИОДЫ
+   ============================================================= */
+function mkLabel(k){ if(!k) return '—'; var p=k.split('-'); return MRU[+p[1]-1]+' '+p[0]; }
+function monthKeys(){ var s={}; RECS.forEach(function(r){ if(r.mk) s[r.mk]=1; }); return Object.keys(s).sort(); }
+function prevKey(k){ var ks=monthKeys(), i=ks.indexOf(k); return i>0 ? ks[i-1] : null; }
+function buildSel(){
+  var sel = document.getElementById('monthSel'); sel.innerHTML = '';
+  monthKeys().forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=mkLabel(k); sel.appendChild(o); });
+  var ks = monthKeys(); if(ks.length){ sel.value = ks[ks.length-1]; MKEY = sel.value; }
+}
+
+/* =============================================================
+   РАСЧЕТЫ
+   ============================================================= */
+function sumBy(rows, key){ var m={}; rows.forEach(function(r){ var k=key(r); if(k) m[k]=(m[k]||0)+r.mass; }); return m; }
+function sorted(m, n){ var a = Object.keys(m).map(function(k){ return {n:k, v:m[k]}; }).sort(function(x,y){ return y.v-x.v; }); return n ? a.slice(0,n) : a; }
+function rowsOf(uk, mk){ return RECS.filter(function(r){ return !r.isR && r.unit===uk && r.mk===mk; }); }
+function calcStats(uk, mk){
+  var d = rowsOf(uk, mk);
+  var tot = d.reduce(function(s,r){ return s+r.mass; }, 0);
+  var docs = {С:{},И:{},К:{}};
+  d.forEach(function(r){ if(docs[r.doc]) docs[r.doc][r.nom]=1; });
+  var acts = {}; d.forEach(function(r){ acts[r.nom]=1; });
+  var shm = sumBy(d, function(r){ return r.shc; });
+  var sh = SHIFT_ORDER.filter(function(s){ return shm[s]; }).map(function(s){ return {n:s, v:shm[s]}; })
+    .concat(Object.keys(shm).filter(function(s){ return SHIFT_ORDER.indexOf(s)<0; }).map(function(s){ return {n:s, v:shm[s]}; }));
+  var cm = sumBy(d, function(r){ return r.cr; });
+  var days = {}; d.forEach(function(r){ if(r.dt){ var x=r.dt.getDate(); days[x]=(days[x]||0)+r.mass; } });
+  return {
+    rows:d, tot:tot, nActs:Object.keys(acts).length,
+    dc:{С:Object.keys(docs['С']).length, И:Object.keys(docs['И']).length, К:Object.keys(docs['К']).length},
+    crit:sorted(cm), unrem:(cm['Неустранимое']||0),
+    defects:sorted(sumBy(d, function(r){ return r.df; })),
+    groups:sorted(sumBy(d, function(r){ return r.g; })),
+    shifts:sh,
+    causes:sorted(sumBy(d, function(r){ return r.co && !/^не указ|^нет$/i.test(r.co) ? r.co : ''; }), 5),
+    items:sorted(sumBy(d, function(r){ return r.nm; }), 5),
+    places:sorted(sumBy(d, function(r){ return r.pl; })),
+    days:days
+  };
+}
+
+/* =============================================================
+   ГРАФИКИ (Chart.js) — единый стиль, четкие подписи
+   ============================================================= */
+Chart.defaults.font.family = "'Manrope','Segoe UI',Arial,sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#51616f';
+Chart.defaults.animation = false;
+Chart.defaults.devicePixelRatio = 3;   // четкость при сохранении в PDF
+
+function hexRgb(hx){ var m=/^#?([0-9a-f]{6})$/i.exec(hx||''); if(!m) return null; var n=parseInt(m[1],16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function onColor(hx){ var c=hexRgb(hx); if(!c) return '#fff'; var L=(0.299*c[0]+0.587*c[1]+0.114*c[2]); return L>170 ? COL.ink : '#fff'; }
+function rgba(hx, a){ var c=hexRgb(hx)||[0,94,196]; return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
+function wrapLbl(txt, mx){
+  txt = String(txt).replace(/\//g, '/ ').replace(/\s+/g,' ').trim(); mx = mx || 18;
+  if(txt.length <= mx) return txt;
+  var words = txt.split(' '), lines = [], cur = '';
+  words.forEach(function(w){
+    while(w.length > mx + 4){ if(cur){ lines.push(cur); cur=''; } lines.push(w.slice(0, mx)+'-'); w = w.slice(mx); }
+    if(!cur) cur=w; else if((cur+' '+w).length <= mx) cur+=' '+w; else { lines.push(cur); cur=w; } });
+  if(cur) lines.push(cur);
+  if(lines.length > 3){ lines = lines.slice(0,3); lines[2] = lines[2].replace(/.?$/,'…'); }
+  return lines;
+}
+function destroyCh(id){ if(CH[id]){ CH[id].destroy(); delete CH[id]; } }
+
+/* Подписи значений: снаружи столбца — темным; в кольце — процент контрастным цветом */
+var LBL = {
+  id:'lbl',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx, isH = chart.options.indexAxis === 'y', type = chart.config.type;
+    ctx.save();
+    chart.data.datasets.forEach(function(ds, di){
+      var meta = chart.getDatasetMeta(di); if(meta.hidden) return;
+      if(type === 'doughnut'){
+        var tot = ds.data.reduce(function(a,b){ return a+(+b||0); },0);
+        meta.data.forEach(function(arc, i){
+          var v = +ds.data[i]||0; if(!tot || v/tot < 0.05) return;
+          var ang = arc.startAngle + (arc.endAngle-arc.startAngle)/2, rr = (arc.innerRadius+arc.outerRadius)/2;
+          ctx.font = '800 12px Manrope, Segoe UI, Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          var bg = Array.isArray(ds.backgroundColor) ? ds.backgroundColor[i] : ds.backgroundColor;
+          ctx.fillStyle = onColor(bg);
+          ctx.fillText(Math.round(v/tot*100)+'%', arc.x + rr*Math.cos(ang), arc.y + rr*Math.sin(ang));
+        });
+        return;
+      }
+      if(ds._noLabels) return;
+      var only = ds._labelTop ? ds.data.map(function(v,i){ return {v:+v||0,i:i}; }).sort(function(a,b){ return b.v-a.v; }).slice(0, ds._labelTop).map(function(x){ return x.i; }) : null;
+      meta.data.forEach(function(bar, i){
+        var v = ds.data[i]; if(!v) return;
+        if(only && only.indexOf(i) < 0) return;
+        var txt = (ds._fmt || fmtK)(v);
+        ctx.font = '800 11.5px Manrope, Segoe UI, Arial'; ctx.fillStyle = COL.ink;
+        if(isH){ ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText(txt, bar.x+6, bar.y); }
+        else { ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(txt, bar.x, bar.y-5); }
+      });
+    });
+    ctx.restore();
+  }
+};
+/* Итог в центре кольца */
+function centerText(top, bottom){
+  return { id:'ctr', afterDraw:function(chart){
+    var a = chart.getDatasetMeta(0).data[0]; if(!a) return;
+    var ctx = chart.ctx; ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = COL.ink; ctx.font = '900 '+(a.innerRadius>60?20:16)+'px Manrope, Segoe UI, Arial';
+    ctx.fillText(top, a.x, a.y-8);
+    ctx.fillStyle = '#6B7A8C'; ctx.font = '700 11px Manrope, Segoe UI, Arial';
+    ctx.fillText(bottom, a.x, a.y+12);
+    ctx.restore();
+  }};
+}
+function hbar(id, items, colors, fmtFn, wrapAt){
+  destroyCh(id);
+  var c = document.getElementById(id); if(!c || !items.length) return;
+  CH[id] = new Chart(c.getContext('2d'), {
+    type:'bar',
+    data:{ labels: items.map(function(d){ return wrapLbl(d.n, wrapAt||24); }),
+      datasets:[{ data: items.map(function(d){ return Math.round(d.v*10)/10; }), backgroundColor: colors,
+        borderRadius:5, borderSkipped:false, maxBarThickness:30, _fmt: fmtFn || function(v){ return fmtI(v); } }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ right:62, top:2, bottom:2 } },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ title:function(it){ return items[it[0].dataIndex].n; }, label:function(x){ return fmtK(x.raw)+' кг'; } } } },
+      scales:{ x:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'}, border:{display:false}, ticks:{ font:{size:10.5}, maxTicksLimit:5, callback:function(v){ return fmtI(v); } } },
+               y:{ grid:{display:false}, border:{display:false}, ticks:{ font:{size:11.5, weight:'600'}, color:COL.ink, autoSkip:false } } } },
+    plugins:[LBL]
+  });
+}
+function donut(id, items, colors, center){
+  destroyCh(id);
+  var c = document.getElementById(id); if(!c || !items.length) return;
+  CH[id] = new Chart(c.getContext('2d'), {
+    type:'doughnut',
+    data:{ labels: items.map(function(d){ return d.n; }), datasets:[{ data: items.map(function(d){ return d.v; }), backgroundColor: colors, borderColor:'#fff', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'58%', layout:{padding:4},
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(x){ var t=x.dataset.data.reduce(function(a,b){return a+b;},0); return x.label+': '+fmtK(x.raw)+' кг ('+pct(x.raw,t)+'%)'; } } } } },
+    plugins:[LBL, centerText(center[0], center[1])]
+  });
+}
+
+/* =============================================================
+   ЭЛЕМЕНТЫ СЛАЙДА
+   ============================================================= */
+var PAGE_NO = 0;
+function slideShell(id, title, sub, periodTxt, footTxt){
+  var s = h('div', {cls:'slide', id:'sl-'+id});
+  var head = h('div', {cls:'s-head'}, [
+    h('div', {cls:'s-chev', st:{left:'150px'}}), h('div', {cls:'s-chev', st:{left:'176px', background:'rgba(255,255,255,.28)'}}),
+    h('div', {cls:'s-logo', text:'ПРОДМАШ'}),
+    h('div', {cls:'s-title', html: esc(title) + (sub ? '<small>' + esc(sub) + '</small>' : '')}),
+    h('div', {cls:'s-period', text:periodTxt})
+  ]);
+  var body = h('div', {cls:'s-body'});
+  var foot = h('div', {cls:'s-foot'}, [ h('span', {text:'АО «Завод Продмаш» · ОРСМК · 15-минутка качества · '+footTxt}), h('span', {cls:'pg'}) ]);
+  s.appendChild(head); s.appendChild(body); s.appendChild(foot);
+  return {slide:s, body:body};
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function kpi(label, value, unit, sub, color, subCls){
+  return h('div', {cls:'kpi'}, [
+    h('div', {cls:'kpi-bar', st:{background:color}}),
+    h('div', {cls:'kpi-l', text:label}),
+    h('div', {cls:'kpi-v', st:{color:color}, html: esc(value) + (unit ? '<small>'+esc(unit)+'</small>' : '')}),
+    h('div', {cls:'kpi-s'+(subCls?' '+subCls:''), text:sub||'\u00a0'})
+  ]);
+}
+/* Изменение массы к прошлому месяцу: рост несоответствий — красный, снижение — зеленый */
+function deltaTxt(cur, prev, prevK, short){
+  if(prev == null) return {t:'нет данных за прошлый месяц', c:'d-flat'};
+  var pm = short ? MRU_D[+prevK.split('-')[1]-1] : MRU_P[+prevK.split('-')[1]-1];
+  var pre = short ? 'к ' : 'по сравнению с ';
+  if(prev === 0) return cur>0 ? {t:'▲ рост с нуля '+pre+pm, c:'d-up'} : {t:'без изменений', c:'d-flat'};
+  var p = Math.round((cur-prev)/prev*100);
+  if(p === 0) return {t:'без изменений к прошлому месяцу', c:'d-flat'};
+  return {t:(p>0?'▲ +':'▼ ')+p+'% '+pre+pm, c:p>0?'d-up':'d-down'};
+}
+function card(title, color, right){
+  var t = h('div', {cls:'card-t'}, [ h('i', {st:{background:color||COL.blue}}), h('div', {text:title}), right ? h('span', {text:right}) : null ]);
+  var c = h('div', {cls:'card'}, [t]);
+  return c;
+}
+function canvasBox(id){ return h('div', {cls:'cbox'}, [ h('canvas', {id:id}) ]); }
+function legend(items, colors, tot){
+  return h('div', {cls:'leg'}, items.map(function(d,i){
+    return h('div', {cls:'leg-row'}, [ h('span', {cls:'leg-dot', st:{background:colors[i]}}), h('span', {cls:'leg-n', text:d.n}),
+      h('span', {cls:'leg-v', text:fmtI(d.v)+' кг'}), h('span', {cls:'leg-p', text:pct(d.v,tot)+'%'}) ]);
+  }));
+}
+function nodata(t){ return h('div', {cls:'nodata', text:t||'Нет данных за период'}); }
+
+/* =============================================================
+   СЛАЙД 1 УЧАСТКА — ОБЗОР
+   ============================================================= */
+function renderUnitOverview(U, mk, pk, wrap){
+  var S = calcStats(U.k, mk), P = pk ? calcStats(U.k, pk) : null;
+  var sh = slideShell(U.id, U.name+' — несоответствующая продукция', U.sub, mkLabel(mk), U.name+' · обзор');
+  var b = sh.body;
+  var dl = deltaTxt(S.tot, P ? P.tot : null, pk);
+  var unPct = pct(S.unrem, S.tot);
+  var lead = S.shifts.filter(function(x){ return /^Смена /.test(x.n); }).sort(function(a,c){ return c.v-a.v; })[0];
+  var kp = h('div', {cls:'kpis', st:{gridTemplateColumns:'1.25fr 1fr 1fr 1fr 1.1fr'}}, [
+    kpi('Масса НП', fmtK(S.tot), 'кг', dl.t, U.color, dl.c),
+    kpi('Инспекц. контроль (И)', S.dc['И'], 'акт.', 'уникальных номеров', COL.blue),
+    kpi('Карты контроля (К)', S.dc['К'], 'карт', 'уникальных номеров', COL.sky),
+    kpi('Самоконтроль (С)', S.dc['С'], 'акт.', 'уникальных номеров', COL.orange),
+    kpi('Неустранимое', unPct+'%', '', fmtK(S.unrem)+' кг от массы НП', unPct>=30?'#C0392B':COL.navy)
+  ]);
+  b.appendChild(kp);
+  var g = h('div', {cls:'grid', st:{gridTemplateColumns:'1fr 1fr', gridTemplateRows:'1fr 1fr'}});
+  // Критичность — кольцо с легендой
+  var c1 = card('Критичность несоответствий', U.color, 'кг · доля');
+  if(S.crit.length){
+    var critCols = S.crit.map(function(x){ return CRIT_COL[x.n] || COL.grey; });
+    c1.appendChild(h('div', {cls:'donut-wrap'}, [ canvasBox('c_'+U.id+'_crit'), legend(S.crit, critCols, S.tot) ]));
+  } else c1.appendChild(nodata());
+  // Продуктовые направления
+  var c2 = card('Продуктовые направления', U.color, 'кг'); c2.appendChild(S.groups.length ? canvasBox('c_'+U.id+'_grp') : nodata());
+  // Топ-5 дефектов
+  var c3 = card('Топ-5 видов дефектов', U.color, 'кг'); c3.appendChild(S.defects.length ? canvasBox('c_'+U.id+'_def') : nodata());
+  // Смены
+  var c4 = card('Распределение по сменам', U.color, lead ? 'больше всего: '+lead.n : 'кг'); c4.appendChild(S.shifts.length ? canvasBox('c_'+U.id+'_sh') : nodata());
+  [c1,c2,c3,c4].forEach(function(c){ g.appendChild(c); });
+  b.appendChild(g);
+  wrap.appendChild(sh.slide);
+  return function(){
+    if(S.crit.length) donut('c_'+U.id+'_crit', S.crit, S.crit.map(function(x){ return CRIT_COL[x.n]||COL.grey; }), [fmtI(S.tot), 'кг всего']);
+    var groups = S.groups.slice(0,6);
+    if(S.groups.length > 6){ var rest = S.groups.slice(6).reduce(function(s,x){ return s+x.v; },0); groups.push({n:'Прочие ('+(S.groups.length-6)+')', v:rest}); }
+    hbar('c_'+U.id+'_grp', groups, groups.map(function(x,i){ return /^Прочие/.test(x.n) ? COL.grey : PAL[i%PAL.length]; }));
+    hbar('c_'+U.id+'_def', S.defects.slice(0,5), S.defects.slice(0,5).map(function(){ return U.color; }), null, 28);
+    hbar('c_'+U.id+'_sh', S.shifts, S.shifts.map(function(x){ return SHIFT_COL[x.n]||COL.slate; }));
+  };
+}
+
+/* =============================================================
+   СЛАЙД 2 УЧАСТКА — ПРИЧИНЫ И ДИНАМИКА (новый)
+   ============================================================= */
+function renderUnitCauses(U, mk, wrap){
+  var S = calcStats(U.k, mk);
+  var sh = slideShell(U.id+'_2', U.name+' — где и почему возникает брак', U.sub, mkLabel(mk), U.name+' · причины и динамика');
+  var b = sh.body;
+  var g = h('div', {cls:'grid', st:{gridTemplateColumns:'1fr 1fr 1fr', gridTemplateRows:'1fr 1.08fr'}});
+  // Динамика по дням
+  var y = +mk.split('-')[0], m = +mk.split('-')[1]-1, nd = new Date(y, m+1, 0).getDate();
+  var daysWith = Object.keys(S.days).length;
+  var c1 = card('Динамика по дням месяца', U.color, daysWith ? 'дней с НП: '+daysWith+' из '+nd : 'кг');
+  c1.style.gridColumn = 'span 2'; c1.appendChild(daysWith ? canvasBox('c_'+U.id+'_days') : nodata());
+  // Где выявлено
+  var c2 = card('Где выявлено', U.color, 'место контроля');
+  var pl = S.places.slice(0,4);
+  if(S.places.length > 4) pl.push({n:'Прочие места', v:S.places.slice(4).reduce(function(s,x){ return s+x.v; },0)});
+  var plCols = pl.map(function(x,i){ return /^Прочие/.test(x.n) ? COL.grey : [U.color, COL.orange===U.color?COL.blue:COL.orange, COL.sky===U.color?COL.navy:COL.sky, COL.green][i%4]; });
+  if(pl.length) c2.appendChild(h('div', {cls:'donut-wrap'}, [ canvasBox('c_'+U.id+'_pl'), legend(pl, plCols, S.tot) ])); else c2.appendChild(nodata());
+  // Смена × вид дефекта (тепловая карта)
+  var c3 = card('Смена × вид дефекта', U.color, 'кг');
+  c3.appendChild(heatmap(S, U.color));
+  // Коренные причины
+  var c4 = card('Коренные причины возникновения', U.color, 'топ-5, кг'); c4.appendChild(S.causes.length ? canvasBox('c_'+U.id+'_cause') : nodata('Причины не указаны'));
+  // Топ изделий
+  var c5 = card('Топ-5 изделий по массе НП', U.color, 'кг'); c5.appendChild(S.items.length ? canvasBox('c_'+U.id+'_items') : nodata());
+  [c1,c2,c3,c4,c5].forEach(function(c){ g.appendChild(c); });
+  b.appendChild(g);
+  wrap.appendChild(sh.slide);
+  return function(){
+    if(daysWith){
+      destroyCh('c_'+U.id+'_days');
+      var labels = [], vals = [];
+      for(var d=1; d<=nd; d++){ labels.push(String(d)); vals.push(Math.round((S.days[d]||0)*10)/10); }
+      CH['c_'+U.id+'_days'] = new Chart(document.getElementById('c_'+U.id+'_days').getContext('2d'), {
+        type:'bar',
+        data:{ labels:labels, datasets:[{ data:vals, backgroundColor:vals.map(function(v){ return v ? U.color : 'rgba(0,0,0,0)'; }), borderRadius:4, borderSkipped:false, maxBarThickness:22, _labelTop:6, _fmt:function(v){ return fmtI(v); } }] },
+        options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:20}},
+          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ title:function(it){ return it[0].label+'.'+String(m+1).padStart(2,'0')+'.'+y; }, label:function(x){ return fmtK(x.raw)+' кг'; } } } },
+          scales:{ x:{ grid:{display:false}, border:{display:false}, ticks:{ font:{size:10.5}, autoSkip:false, maxRotation:0 } },
+                   y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'}, border:{display:false}, ticks:{ font:{size:10.5}, maxTicksLimit:5, callback:function(v){ return fmtI(v); } } } } },
+        plugins:[LBL]
+      });
+    }
+    if(pl.length) donut('c_'+U.id+'_pl', pl, plCols, [pct(pl[0].v, S.tot)+'%', 'основное']);
+    hbar('c_'+U.id+'_cause', S.causes, S.causes.map(function(){ return U.color; }), null, 20);
+    hbar('c_'+U.id+'_items', S.items, S.items.map(function(){ return COL.slate; }), null, 22);
+  };
+}
+function heatmap(S, color){
+  var defs = S.defects.slice(0,5).map(function(x){ return x.n; });
+  var shifts = S.shifts.map(function(x){ return x.n; });
+  if(!defs.length || !shifts.length) return nodata();
+  var M = {}, mx = 0;
+  S.rows.forEach(function(r){ if(defs.indexOf(r.df)<0) return; var k=r.df+'|'+r.shc; M[k]=(M[k]||0)+r.mass; if(M[k]>mx) mx=M[k]; });
+  var short = function(s){ return s.replace('Смена ','См. ').replace('Смены ','См. ').replace('Невозможно установить','Не уст.').replace('Отработка технологии','Отраб.').replace('В работе','В раб.'); };
+  var t = h('table', {cls:'hm'});
+  var cg = h('colgroup'); cg.appendChild(h('col', {st:{width:'34%'}})); shifts.forEach(function(){ cg.appendChild(h('col')); }); t.appendChild(cg);
+  var hr = h('tr'); hr.appendChild(h('th', {cls:'hm-rowh', text:'Дефект'}));
+  shifts.forEach(function(s){ hr.appendChild(h('th', {text:short(s), st:{color:SHIFT_COL[s]||'#6B7A8C'}})); });
+  t.appendChild(h('thead', {}, [hr]));
+  var tb = h('tbody');
+  defs.forEach(function(dn){
+    var tr = h('tr'); tr.appendChild(h('td', {cls:'hm-name', text:dn.length>42 ? dn.slice(0,41)+'…' : dn}));
+    shifts.forEach(function(s){
+      var v = M[dn+'|'+s]||0, a = v ? 0.12 + 0.88*(v/mx) : 0;
+      tr.appendChild(h('td', {text: v ? fmtI(v) : '·', st:{ background: v ? rgba(color, a) : '#F6F8FB', color: v ? (a>0.55 ? '#fff' : COL.ink) : '#C2CBD6' }}));
+    });
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  return h('div', {st:{flex:'1', overflow:'hidden'}}, [t]);
+}
+
+/* =============================================================
+   СЛАЙД СМЕН
+   ============================================================= */
+function renderShiftSlide(X, mk, pk, wrap){
+  var S = calcStats(X.k, mk), P = pk ? calcStats(X.k, pk) : null;
+  var sh = slideShell(X.id, X.name+' — несоответствия по сменам', X.sub, mkLabel(mk), X.name+' · смены');
+  var b = sh.body;
+  var row = h('div', {st:{display:'flex', gap:'22px', flex:'1', minHeight:'0'}});
+  var left = h('div', {cls:'card', st:{flex:'0 0 400px'}}, [ h('div', {cls:'card-t'}, [ h('i', {st:{background:COL.blue}}), h('div', {text:'Доля смен в массе НП'}) ]) ]);
+  left.appendChild(S.shifts.length ? canvasBox('c_'+X.id+'_d') : nodata());
+  var list = h('div', {cls:'sh-list', st:{flex:'1'}});
+  var named = S.shifts.filter(function(x){ return /^Смена /.test(x.n); });
+  var leadN = named.length ? named.slice().sort(function(a,c){ return c.v-a.v; })[0].n : null;
+  if(!S.shifts.length) list.appendChild(nodata('Нет данных по сменам'));
+  S.shifts.forEach(function(x){
+    var col = SHIFT_COL[x.n] || COL.slate;
+    var rows = S.rows.filter(function(r){ return r.shc===x.n; });
+    var topDef = sorted(sumBy(rows, function(r){ return r.df; }), 1)[0];
+    var acts = {}; rows.forEach(function(r){ acts[r.nom]=1; });
+    var cardE = h('div', {cls:'sh-card'}, [
+      h('div', {cls:'kpi-bar', st:{background:col}}),
+      h('div', {cls:'sh-top'}, [ h('div', {cls:'sh-name', st:{color:col===COL.amber?'#9A7400':col}}, [ document.createTextNode(x.n), x.n===leadN ? h('span', {cls:'sh-lead', text:'больше всего'}) : null ]), h('div', {cls:'sh-kg', text:fmtI(x.v)+' кг'}), h('div', {cls:'sh-pct', text:pct(x.v,S.tot)+'%'}) ]),
+      h('div', {cls:'sh-track'}, [ h('div', {cls:'sh-fill', st:{width:pct(x.v,S.tot)+'%', background:col}}) ]),
+      h('div', {cls:'sh-meta'}, [
+        h('span', {html:'Актов: <b>'+Object.keys(acts).length+'</b>'}),
+        h('span', {html:'Главный дефект: <b>'+esc(topDef ? (topDef.n.length>46?topDef.n.slice(0,45)+'…':topDef.n) : '—')+'</b>'}),
+      ])
+    ]);
+    list.appendChild(cardE);
+  });
+  row.appendChild(left); row.appendChild(list);
+  b.appendChild(row);
+  wrap.appendChild(sh.slide);
+  return function(){ if(S.shifts.length) donut('c_'+X.id+'_d', S.shifts, S.shifts.map(function(x){ return SHIFT_COL[x.n]||COL.slate; }), [fmtI(S.tot), 'кг всего']); };
+}
+
+/* =============================================================
+   СВОДНЫЙ АНАЛИЗ
+   ============================================================= */
+function renderSummary(mk, pk, wrap){
+  var ST = {}, PT = {};
+  UNITS.forEach(function(U){ ST[U.k] = calcStats(U.k, mk); PT[U.k] = pk ? calcStats(U.k, pk) : null; });
+  var totAll = UNITS.reduce(function(s,U){ return s+ST[U.k].tot; },0);
+  var totPrev = pk ? UNITS.reduce(function(s,U){ return s+PT[U.k].tot; },0) : null;
+  var dAll = deltaTxt(totAll, totPrev, pk, true);
+  var sh = slideShell('sum', 'Сводный анализ — УПН · УМИ · ЦГЦ', 'всего НП: '+fmtK(totAll)+' кг', mkLabel(mk), 'сводный анализ');
+  var b = sh.body;
+  var tiles = h('div', {cls:'u-tiles'}, UNITS.map(function(U){
+    var S = ST[U.k], d = deltaTxt(S.tot, PT[U.k] ? PT[U.k].tot : null, pk, true);
+    return h('div', {cls:'u-tile', st:{background:U.color}}, [
+      h('div', {cls:'u-tile-n', text:U.name+' · '+pct(S.tot,totAll)+'% от всего'}),
+      h('div', {cls:'u-tile-v', html:fmtK(S.tot)+'<small>кг</small>'}),
+      h('div', {cls:'u-tile-s', text:(PT[U.k]==null ? 'актов: '+S.nActs : d.t+' · актов: '+S.nActs)})
+    ]);
+  }));
+  b.appendChild(tiles);
+  var g = h('div', {cls:'grid', st:{gridTemplateColumns:'1fr 1.25fr 1fr', gridTemplateRows:'1fr auto'}});
+  var c1 = card('Масса НП по участкам', COL.blue, totPrev==null ? 'кг' : dAll.t); c1.appendChild(canvasBox('c_sum_mass'));
+  var c2 = card('Смены по участкам', COL.blue, '% от массы участка'); c2.appendChild(canvasBox('c_sum_sh'));
+  var c3 = card('Доля неустранимого по участкам', COL.orange, '% от массы НП'); c3.appendChild(canvasBox('c_sum_un'));
+  var c4 = card('Ключевые дефекты по участкам', COL.blue, 'топ-3, доля от массы участка');
+  c4.style.gridColumn = 'span 3';
+  var dlist = h('div', {cls:'def-list'});
+  UNITS.forEach(function(U){
+    var S = ST[U.k], t = S.tot || 1;
+    var line = S.defects.slice(0,3).map(function(d){ return '<b>'+esc(d.n)+'</b> — '+(d.v/t*100).toFixed(1).replace('.',',')+'%'; }).join(' · ');
+    dlist.appendChild(h('div', {cls:'def-row'}, [ h('div', {cls:'def-badge', text:U.name, st:{background:U.color}}), h('div', {cls:'def-text', html: line || 'нет данных'}) ]));
+  });
+  c4.appendChild(dlist);
+  [c1,c2,c3,c4].forEach(function(c){ g.appendChild(c); });
+  b.appendChild(g);
+  wrap.appendChild(sh.slide);
+  return function(){
+    var names = UNITS.map(function(U){ return U.name; });
+    var namesW = UNITS.map(function(U){ return wrapLbl(U.name, 8); });
+    destroyCh('c_sum_mass');
+    CH['c_sum_mass'] = new Chart(document.getElementById('c_sum_mass').getContext('2d'), {
+      type:'bar',
+      data:{ labels:namesW, datasets:[{ data:UNITS.map(function(U){ return Math.round(ST[U.k].tot); }), backgroundColor:UNITS.map(function(U){ return U.color; }), borderRadius:6, borderSkipped:false, maxBarThickness:56, _fmt:function(v){ return fmtI(v); } }] },
+      options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:22}},
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(x){ return fmtK(x.raw)+' кг'; } } } },
+        scales:{ x:{ grid:{display:false}, border:{display:false}, ticks:{ font:{size:11.5, weight:'700'}, color:COL.ink, maxRotation:0, autoSkip:false } },
+                 y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'}, border:{display:false}, ticks:{ maxTicksLimit:5, callback:function(v){ return fmtI(v); } } } } },
+      plugins:[LBL]
+    });
+    // Структура смен — 100% по каждому участку
+    destroyCh('c_sum_sh');
+    var cats = SHIFT_ORDER.filter(function(s){ return UNITS.some(function(U){ return ST[U.k].shifts.some(function(x){ return x.n===s; }); }); });
+    UNITS.forEach(function(U){ ST[U.k].shifts.forEach(function(x){ if(cats.indexOf(x.n)<0) cats.push(x.n); }); });
+    CH['c_sum_sh'] = new Chart(document.getElementById('c_sum_sh').getContext('2d'), {
+      type:'bar',
+      data:{ labels:names, datasets: cats.map(function(s){ return { label:s, data:UNITS.map(function(U){ var S=ST[U.k], v=(S.shifts.filter(function(x){ return x.n===s; })[0]||{v:0}).v; return S.tot ? Math.round(v/S.tot*1000)/10 : 0; }), backgroundColor:SHIFT_COL[s]||COL.slate, borderSkipped:false, _noLabels:true }; }) },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ usePointStyle:true, pointStyle:'rectRounded', boxWidth:9, boxHeight:9, padding:9, font:{size:10.5} } },
+          tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': '+String(x.raw).replace('.',',')+'%'; } } } },
+        scales:{ x:{ stacked:true, max:100, grid:{color:'rgba(0,0,0,.06)'}, border:{display:false}, ticks:{ font:{size:10}, callback:function(v){ return v+'%'; } } },
+                 y:{ stacked:true, grid:{display:false}, border:{display:false}, ticks:{ font:{size:11.5, weight:'700'}, color:COL.ink } } } },
+      plugins:[{ id:'stk', afterDatasetsDraw:function(chart){ var ctx=chart.ctx; ctx.save(); ctx.font='800 11px Manrope, Segoe UI, Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        chart.data.datasets.forEach(function(ds,di){ chart.getDatasetMeta(di).data.forEach(function(el,i){ var v=ds.data[i]; if(!v) return; var w=Math.abs(el.x-el.base); if(w<34) return; ctx.fillStyle=onColor(ds.backgroundColor); ctx.fillText(Math.round(v)+'%', (el.x+el.base)/2, el.y); }); }); ctx.restore(); } }]
+    });
+    destroyCh('c_sum_un');
+    CH['c_sum_un'] = new Chart(document.getElementById('c_sum_un').getContext('2d'), {
+      type:'bar',
+      data:{ labels:namesW, datasets:[{ data:UNITS.map(function(U){ return pct(ST[U.k].unrem, ST[U.k].tot); }), backgroundColor:COL.orange, borderRadius:6, borderSkipped:false, maxBarThickness:56, _fmt:function(v){ return v+'%'; } }] },
+      options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:22}},
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(x){ var U=UNITS[x.dataIndex]; return x.raw+'% · '+fmtK(ST[U.k].unrem)+' кг'; } } } },
+        scales:{ x:{ grid:{display:false}, border:{display:false}, ticks:{ font:{size:11.5, weight:'700'}, color:COL.ink, maxRotation:0, autoSkip:false } },
+                 y:{ beginAtZero:true, suggestedMax:Math.max(10, Math.ceil(Math.max.apply(null, UNITS.map(function(U){ return pct(ST[U.k].unrem, ST[U.k].tot); }))*1.3)), grid:{color:'rgba(0,0,0,.06)'}, border:{display:false}, ticks:{ maxTicksLimit:5, callback:function(v){ return v+'%'; } } } } },
+      plugins:[LBL]
+    });
+  };
+}
+
+/* =============================================================
+   ГЛАВНАЯ ОТРИСОВКА
+   ============================================================= */
+var TM = {};
+function renderAll(){
+  MKEY = document.getElementById('monthSel').value || MKEY;
+  if(!RECS.length || !MKEY) return;
+  Object.keys(CH).forEach(destroyCh);
+  var pk = prevKey(MKEY);
+  var wrap = document.getElementById('slidesWrap'); wrap.innerHTML = '';
+  var draws = [];
+  TM = { all:[] };
+  UNITS.forEach(function(U){
+    draws.push(renderUnitOverview(U, MKEY, pk, wrap));
+    draws.push(renderUnitCauses(U, MKEY, wrap));
+    TM[U.id] = ['sl-'+U.id, 'sl-'+U.id+'_2'];
+  });
+  SHIFT_SLIDES.forEach(function(X){ draws.push(renderShiftSlide(X, MKEY, pk, wrap)); TM[X.id] = ['sl-'+X.id]; });
+  draws.push(renderSummary(MKEY, pk, wrap)); TM.sum = ['sl-sum'];
+  TM.all = Array.prototype.map.call(wrap.children, function(e){ return e.id; });
+  Array.prototype.forEach.call(wrap.children, function(e, i){ var pg = e.querySelector('.pg'); if(pg) pg.textContent = String(i+1); });
+  draws.forEach(function(f){ f(); });
+  applyTabs();
+}
+function setTab(btn){
+  CUR_TAB = btn.getAttribute('data-tab');
+  document.querySelectorAll('.tab').forEach(function(t){ t.className = 'tab'; });
+  btn.className = 'tab tab-active';
+  applyTabs();
+}
+function applyTabs(){
+  var vis = TM[CUR_TAB] || TM.all || [];
+  (TM.all||[]).forEach(function(id){ var e=document.getElementById(id); if(e) e.className = vis.indexOf(id)>=0 ? 'slide' : 'slide slide-hidden'; });
+}
+
+/* =============================================================
+   PDF — листы A4 альбомные, четкие (PNG, высокое разрешение)
+   ============================================================= */
+function exportPdf(){
+  var jsPDF = window.jspdf && window.jspdf.jsPDF;
+  if(!jsPDF){ alert('Библиотека jsPDF не загружена. Проверьте подключение к интернету.'); return; }
+  var visIds = (TM.all||[]).filter(function(id){ var e=document.getElementById(id); return e && e.className.indexOf('slide-hidden')<0; });
+  if(!visIds.length){ alert('Нет слайдов для сохранения.'); return; }
+  var ovl = document.getElementById('pdfOvl'), msg = document.getElementById('pdfMsg'), bar = document.getElementById('pdfBar');
+  ovl.className = 'pdf-overlay pdf-overlay-show';
+  // Страница PDF — ровно A4 альбомная (297 × 210 мм). Слайд ставится с полями 6 мм,
+  // чтобы при печати принтер ничего не обрезал по краям.
+  var PW = 297, PH = 210, MG = 6;
+  var IW = PW - MG*2, IH = IW * 890 / 1280;            // 285 × 198,2 мм
+  var IX = MG, IY = (PH - IH) / 2;
+  var pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+  var si = 0;
+  function finish(){
+    bar.style.width = '100%'; msg.textContent = 'Сохранение…';
+    setTimeout(function(){
+      pdf.save('15-минутка_'+mkLabel(MKEY).replace(' ','_')+'.pdf');
+      ovl.className = 'pdf-overlay'; bar.style.width = '0';
+    }, 150);
+  }
+  function next(){
+    if(si >= visIds.length){ finish(); return; }
+    var el = document.getElementById(visIds[si]);
+    msg.textContent = 'Слайд '+(si+1)+' из '+visIds.length+'…';
+    bar.style.width = Math.round(si/visIds.length*100)+'%';
+    setTimeout(function(){
+      html2canvas(el, { scale:2.5, useCORS:true, logging:false, backgroundColor:'#ffffff', width:1280, height:890,
+        onclone:function(doc){ var c = doc.getElementById(visIds[si]); if(c){ c.style.borderRadius='0'; c.style.boxShadow='none'; } } })
+      .then(function(cvs){
+        if(si>0) pdf.addPage('a4', 'landscape');
+        pdf.addImage(cvs.toDataURL('image/png'), 'PNG', IX, IY, IW, IH, undefined, 'FAST');
+        si++; next();
+      }).catch(function(err){ alert('Ошибка при сохранении слайда: '+err.message); ovl.className='pdf-overlay'; });
+    }, 60);
+  }
+  next();
+}
+</script>
+</body>
+</html>
